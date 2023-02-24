@@ -149,7 +149,6 @@ uint32_t SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, b
 
 void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t *yearIN, byte *hourIN, byte *minIN, byte *secIN){
 
-
   uint32_t nextSeconds = 31535999UL;
   *yearIN = 2023;
 
@@ -231,7 +230,7 @@ long RTC_GetDateTime(){
     r -= myTime;
 
   }
-    return r;   // positive = µC is faster 
+  return r;   // positive = µC is faster 
 }
 
 char RTC_SetDateTime(){
@@ -610,16 +609,6 @@ byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
   }
   
   uint32_t offDuration = 86400L - onDuration;
-
-  /*
-  Serial.println(onDuration);
-  Serial.println(offDuration);
-  Serial.println(onTime);
-  PrintSerTime(myTime, 1);
-  Serial.println("");
-  DeSerializeTime(myTime, &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
-  myTime = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
-  */
 
   return IntervalTimer(timerIN, onDuration, offDuration, onTime);
 
