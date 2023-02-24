@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define RUNNING_TIMERS_CNT 12
+#define RUNNING_TIMERS_CNT 16
 
 struct TimerSTRUCT{
   uint32_t onTime;
@@ -45,8 +45,8 @@ struct TimerSTRUCT{
   byte myHour = 0;
   byte myDay = 1;
   byte myMonth = 1;
-  unsigned int myYear = 2023;
-  unsigned long myTime = 0;
+  uint16_t myYear = 2023;
+  uint32_t myTime = 0;
 
 // RTC-Temp
   long myRtcTemp = 0;
@@ -62,12 +62,12 @@ char ByteToChar(byte valIN){
     return (char)valIN;
 }
 
-byte GetWeekDay(unsigned long serialTime){
+byte GetWeekDay(uint32_t serialTime){
   // 01.01.2023 (start of 'myTime') was a Sunday
   // Sunday is day 1
 
   byte r = 1;
-  unsigned long hlp = serialTime % 604800;    // remove full weeks
+  uint32_t hlp = serialTime % 604800;    // remove full weeks
   
   r += (byte)(hlp / 86400);                   // add full days
   if (hlp % 86400){
@@ -123,9 +123,9 @@ return r;
 
 }
 
-unsigned long SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, byte minIN, byte secIN){
+uint32_t SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, byte minIN, byte secIN){
     // Do Serialized Time (Start from 01.01.2023)
-    unsigned long serializedTime = 0;
+    uint32_t serializedTime = 0;
     // Years
     for (uint16_t i = 2023; i < yearIN; i++){
       serializedTime += 31536000; // 365 * 86400
@@ -135,22 +135,22 @@ unsigned long SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hour
     }
     // Months
     for (int i = 1; i < monthIN; i++){
-      serializedTime += (unsigned long)GetDaysOfMonth(i, yearIN) * 86400UL;
+      serializedTime += (uint32_t)GetDaysOfMonth(i, yearIN) * 86400UL;
     }
     // Days
-    serializedTime += (unsigned long)(dayIN - 1) * 86400UL;
+    serializedTime += (uint32_t)(dayIN - 1) * 86400UL;
     // Hours
-    serializedTime += (unsigned long)hourIN * 3600;
+    serializedTime += (uint32_t)hourIN * 3600;
     // Minutes
-    serializedTime += (unsigned long)minIN * 60;
+    serializedTime += (uint32_t)minIN * 60;
     // Seconds
     return serializedTime + secIN;
 }
 
-void DeSerializeTime(unsigned long serializedIN, byte *dayIN, byte *monthIN, uint16_t *yearIN, byte *hourIN, byte *minIN, byte *secIN){
+void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t *yearIN, byte *hourIN, byte *minIN, byte *secIN){
 
 
-  unsigned long nextSeconds = 31535999UL;
+  uint32_t nextSeconds = 31535999UL;
   *yearIN = 2023;
 
   // Year
@@ -365,7 +365,7 @@ void PrintHlpTime(byte hourIN, byte minIN, byte secIN){
     Serial.print(strHLP);
 }
 
-void PrintHlpDate(byte dayIN, byte monthIN, unsigned int yearIN){
+void PrintHlpDate(byte dayIN, byte monthIN, uint16_t yearIN){
     IntToStr((long)dayIN * 1000,2,0,'0');
     Serial.print(strHLP);
     Serial.print(F("."));
@@ -393,10 +393,10 @@ void SerialDayTimeToStr(uint32_t timeIN){
   strHLP2[8] = 0;
 }
 
-void PrintSerTime(unsigned long timeIN, byte d){
+void PrintSerTime(uint32_t timeIN, byte d){
   // if d is set, '000d 00:00:00'
   // else         '00:00:00'
-  unsigned long days = 0;
+  uint32_t days = 0;
   if (d){
     days = timeIN / 86400UL;
   }
@@ -435,7 +435,7 @@ void DoRealTime(){
   // need to get called every second...
 
   //Trigger for RTC sync
-  static unsigned long triggerRTC = 0;
+  static uint32_t triggerRTC = 0;
   static long rtcSyncDiff = 0;
 
   // Overflow day (default 32 = more months with 31 days)
@@ -510,11 +510,11 @@ void DoRealTime(){
 
 byte DoTimer(){
   
-  static unsigned long last_mS = 0;
-  static unsigned long lost_mS = 0;
-  unsigned long left_mS = 0;
+  static uint32_t last_mS = 0;
+  static uint32_t lost_mS = 0;
+  uint32_t left_mS = 0;
 
-  unsigned long sys_mS = millis();
+  uint32_t sys_mS = millis();
 
   // Time left since last call
   if (last_mS > sys_mS){
@@ -564,13 +564,13 @@ byte DoTimer(){
 
 // TIMER
 
-unsigned long CurrentIntervalPos(unsigned long timerIN, unsigned long onTime, unsigned long offTime, unsigned long offset){
+uint32_t CurrentIntervalPos(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset){
   // Calculate the current position within the interval
-  return (unsigned long)(timerIN - offset) % (unsigned long)(onTime + offTime);
+  return (uint32_t)(timerIN - offset) % (uint32_t)(onTime + offTime);
 }
 #define LastInterval(timerIN, onTime, offTime, offset) CurrentIntervalPos(timerIN, onTime, offTime, offset)
 
-byte IntervalTimer(unsigned long timerIN, unsigned long onTime, unsigned long offTime, unsigned long offset) {
+byte IntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset) {
     // Check if the current position is within the "on" interval
     if (CurrentIntervalPos(timerIN, onTime, offTime, offset) < onTime){
         return 1; // "on" interval
@@ -578,13 +578,13 @@ byte IntervalTimer(unsigned long timerIN, unsigned long onTime, unsigned long of
     return 0;     // "off" interval
 }
 
-unsigned long NextInterval(unsigned long timerIN, unsigned long onTime, unsigned long offTime, unsigned long offset){
+uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset){
 
   return (onTime + offTime) - CurrentIntervalPos(timerIN, onTime, offTime, offset);
 
 }
 
-byte InterruptedIntervalTimer(unsigned long timerIN, unsigned long onTime, unsigned long offTime, unsigned long offset, unsigned long onTime2, unsigned long offTime2){
+byte InterruptedIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2){
   // Check if 1st interval is valid
   if (IntervalTimer(timerIN, onTime, offTime, offset)){
     // Check if 2nd interval is valid
@@ -595,11 +595,11 @@ byte InterruptedIntervalTimer(unsigned long timerIN, unsigned long onTime, unsig
   return 0;
 }
 
-byte DayTimer (unsigned long timerIN, unsigned long onTime, unsigned long offTime){
+byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
 
   // ordinary 24h timer
 
-  unsigned long onDuration;
+  uint32_t onDuration;
 
   if (offTime < onTime){
     // Jump over Midnight
@@ -609,7 +609,7 @@ byte DayTimer (unsigned long timerIN, unsigned long onTime, unsigned long offTim
     onDuration = offTime - onTime;
   }
   
-  unsigned long offDuration = 86400L - onDuration;
+  uint32_t offDuration = 86400L - onDuration;
 
   /*
   Serial.println(onDuration);

@@ -140,7 +140,8 @@ void EscBold(byte set){
 
   #if ESC_CAN_FAINT
   #else
-    if (escFaintIsActive && !set){
+    //if (escFaintIsActive && !set){
+    if (escFaintIsActive){
       // We need to disable the color based faint realization
       EscFaint(0);
     }

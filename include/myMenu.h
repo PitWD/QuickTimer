@@ -3,7 +3,8 @@
 #include "myTime.h"
 #include <EEPROM.h>
 
-char myBoot = 0;    // 0 = Terminal  /  1 = Slave
+byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
+uint32_t mySpeed = 9600;
 
 long exp10(int e){
   long x = 1;
@@ -746,21 +747,50 @@ Start:
   if (runningTimers[timer].type.interval || runningTimers[timer].type.interrupted || runningTimers[timer].type.dayTimer){
     // Timer is defined
     EscBold(1);
-    Serial.print(F("  (1)   "));
+    Serial.print(F("  "));
+    EscUnder(1);
+    Serial.print(F("(1)"));
+    EscUnder(0);
+    Serial.print(F("   "));
     PrintSpacer(1);
-    Serial.print(F("  (2)   "));
+    EscBold(1);
+    Serial.print(F("  "));
+    EscUnder(1);
+    Serial.print(F("(2)"));
+    EscUnder(0);
+    Serial.print(F("   "));
   }  
   if (runningTimers[timer].type.interrupted){
     PrintSpacer(1);
-    Serial.print(F("  (3)   "));
+    EscBold(1);
+    Serial.print(F("  "));
+    EscUnder(1);
+    Serial.print(F("(3)"));
+    EscUnder(0);
+    Serial.print(F("   "));
     PrintSpacer(1);
-    Serial.print(F("  (4)   "));
+    EscBold(1);
+    Serial.print(F("  "));
+    EscUnder(1);
+    Serial.print(F("(4)"));
+    EscUnder(0);
+    Serial.print(F("   "));
     PrintSpacer(1);
-    Serial.print(F("  (5)   "));
+    EscBold(1);
+    Serial.print(F("  "));
+    EscUnder(1);
+    Serial.print(F("(5)"));
+    EscUnder(0);
+    Serial.print(F("   "));
   }
   else if (runningTimers[timer].type.interval){
     PrintSpacer(1);
-    Serial.print(F("  (3)   "));
+    EscBold(1);
+    Serial.print(F("  "));
+    EscUnder(1);
+    Serial.print(F("(3)"));
+    EscUnder(0);
+    Serial.print(F("   "));
   }
   PrintSpacer(0);
 
@@ -768,30 +798,101 @@ Start:
 
   EscLocate(4, pos++);
   PrintMenuKey('A', 0, 0);
+  if (runningTimers[timer].type.interval && !runningTimers[timer].type.interrupted){
+    EscBold(1);
+  }
   Serial.print(F("Interval Timer     "));
   PrintMenuKey('B', 0, 0);
+  if (runningTimers[timer].type.interrupted){
+    EscBold(1);
+  }  
   Serial.print(F("Double Interval Timer"));
   EscLocate(4, pos++);
   PrintMenuKey('C', 0, 0);
+  if (runningTimers[timer].type.dayTimer){
+    EscBold(1);
+  }
   Serial.print(F("24h-Day Timer      "));
   PrintMenuKey('D', 0, 0);
+  if (!runningTimers[timer].type.interval && !runningTimers[timer].type.interrupted && !runningTimers[timer].type.dayTimer){
+    EscBold(1);
+  }
   Serial.print(F("Disabled"));
   PrintShortLine(pos++, 4);
   EscLocate(4, pos++);
-  Serial.print(F("E): All  F): Sun  G): Mon  H): Tue  I): Wed  J): Thu  K): Fri  L): Sat"));
+  
+  PrintMenuKey('E',0,0);
+  if (!runningTimers[timer].weekDays){
+    EscBold(1);
+  }
+  else{
+    EscFaint(1);
+  }
+  Serial.print(F("ALL  "));
+  PrintMenuKey('F',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 1)){
+    EscFaint(1);
+  }
+  Serial.print(F("Sun  "));
+  PrintMenuKey('G',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 2)){
+    EscFaint(1);
+  }
+  Serial.print(F("Mon  "));
+  PrintMenuKey('H',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 3)){
+    EscFaint(1);
+  }
+  Serial.print(F("TUE  "));
+  PrintMenuKey('I',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 4)){
+    EscFaint(1);
+  }
+  Serial.print(F("Wed  "));
+  PrintMenuKey('J',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 5)){
+    EscFaint(1);
+  }
+  Serial.print(F("Thu  "));
+  PrintMenuKey('K',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 6)){
+    EscFaint(1);
+  }
+  Serial.print(F("Fri  "));
+  PrintMenuKey('L',0,0);
+  if (!bitRead(runningTimers[timer].weekDays, 7)){
+    EscFaint(1);
+  }
+  Serial.print(F("Sat  "));  
+  //Serial.print(F("E): All  F): Sun  G): Mon  H): Tue  I): Wed  J): Thu  K): Fri  L): Sat"));
   PrintShortLine(pos++, 4);
   EscLocate(4, pos++);
   PrintMenuKey('M', 0, 0);
+  if (runningTimers[timer].state.automatic){
+    EscBold(1);
+  }
   Serial.print(F("Automatic          "));
   PrintMenuKey('N', 0, 0);
+  if (runningTimers[timer].state.permOff){
+    EscBold(1);
+  }
   Serial.print(F("Permanent OFF      "));
   PrintMenuKey('O', 0, 0);
+  if (runningTimers[timer].state.permOn){
+    EscBold(1);
+  }
   Serial.print(F("Permanent ON"));
   PrintShortLine(pos++, 4);
   EscLocate(4, pos++);
   PrintMenuKey('P', 0, 0);
+  if (runningTimers[timer].state.tempOff){
+    EscBold(1);
+  }
   Serial.print(F("Temporary OFF      "));
   PrintMenuKey('Q', 0, 0);
+  if (runningTimers[timer].state.tempOn){
+    EscBold(1);
+  }
   Serial.print(F("Temporary ON       "));
   PrintMenuKey('R', 0, 0);
   Serial.print(F("SetTempTime: "));
@@ -939,13 +1040,14 @@ Start:
   case 'r':
     // set temporary time
     tempTime = GetUserTime(tempTime);
-    pos = 0;
     break;
   default:
     break;
   }
   if (pos > 0){
-    EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimers[timer]);
+    if (pos != 'r'){
+      EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimers[timer]);
+    }  
     goto Start;
   }  
 }
@@ -1006,44 +1108,50 @@ Start:
 
   pos = PrintShortLine(pos + 1, 8);
 
-  EscLocate(5, pos++);
-  PrintMenuKey('1', 0, ' ');
+  EscLocate(5, pos);
+  PrintMenuKey('1', 0, 0);
   Serial.print(F("ReBoot"));
-  EscLocate(5, pos++);
-  PrintMenuKey('2', 0, ' ');
-  Serial.print(F("Boot for Terminal = "));
-  if (myBoot){
-    EscFaint(1);
-    Serial.print(F("False"));
-  }
-  else{
-    EscBold(1);
-    Serial.print(F("True"));
-  }
-  EscBold(0);
-  EscLocate(5, pos++);
-  PrintMenuKey('3', 0, ' ');
-  Serial.print(F("Boot as Slave     = "));
-  if (myBoot){
-    EscBold(1);
-    Serial.print(F("True"));
-  }
-  else{
-    EscFaint(1);
-    Serial.print(F("False"));
-  }
-  EscBold(0);
-  EscLocate(5, pos++);
-  PrintMenuKey('4', 0, ' ');
-  Serial.print(F("Set Slave Address = "));
-  PrintBoldValue((long)myAddress * 1000, 3, 0, '0');
-  EscLocate(5, pos++);
-  PrintMenuKey('5', 0, ' ');
+  EscLocate(18, pos);
+  PrintMenuKey('5', 0, 0);
   Serial.print(F("Set Date & Time"));
+  EscLocate(40, pos++);
+  PrintMenuKey('6', 0, 0);
+  Serial.print(F("Set Speed = "));
+  EscBold(1);
+  Serial.print(mySpeed);
+
+  EscLocate(5, pos);
+  PrintMenuKey('2', 0, 0);
+  Serial.print(F("Boot4Terminal = "));
+  if (myBoot){
+    EscFaint(1);
+    Serial.print(F("False"));
+  }
+  else{
+    EscBold(1);
+    Serial.print(F("True"));
+  }
+  EscBold(0);
+  EscLocate(32, pos);
+  PrintMenuKey('3', 0, 0);
+  Serial.print(F("Boot4Slave = "));
+  if (myBoot){
+    EscBold(1);
+    Serial.print(F("True"));
+  }
+  else{
+    EscFaint(1);
+    Serial.print(F("False"));
+  }
+  EscBold(0);
+  EscLocate(58, pos++);
+  PrintMenuKey('4', 0, 0);
+  Serial.print(F("Address = "));
+  PrintBoldValue((long)myAddress * 1000, 3, 0, '0');
   
   PrintMenuEnd(pos + 1);
 
-  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 5);
+  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 6);
   switch (pos){
   case -1:
     // TimeOut
@@ -1066,8 +1174,10 @@ Start:
     // Set Date & Time
     PrintDateTimeMenu();
     break;
-  case '0':
   case '6':
+    // Set Speed
+    break;
+  case '0':
   case '7':
   case '8':
   case '9':
