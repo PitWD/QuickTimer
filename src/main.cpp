@@ -28,6 +28,7 @@ for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
     strcpy(runningTimers[i].name, "Default-");
     runningTimers[i].name[8] = 'A' + i; 
     runningTimers[i].name[9] = 0;
+    runningTimers[i].type.invert = 0;
     EEPROM.put(i * sizeof(TimerSTRUCT), runningTimers[i]); 
   }
   // Set Output & StartValue
@@ -38,6 +39,7 @@ for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
   else{
     digitalWrite(i + 2, LOW);
   }
+  runningTimers[i].state.lastVal = 0;
 }
 
 PrintMainMenu();
