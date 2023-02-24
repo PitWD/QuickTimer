@@ -718,6 +718,7 @@ Start:
 void PrintEditMenu(byte timer){
 
   uint32_t tempTime = 900;
+  byte isChanged = 0;
 
 Start:
 
@@ -1046,10 +1047,13 @@ Start:
   }
   if (pos > 0){
     if (pos != 'r'){
-      EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimers[timer]);
+      isChanged = 1;
     }  
     goto Start;
   }  
+  if (isChanged){
+    EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimers[timer]);
+  }
 }
 
 void PrintLoopMenu(){
