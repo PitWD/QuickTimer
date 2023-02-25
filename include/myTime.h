@@ -7,10 +7,13 @@ struct TimerSTRUCT{
   uint32_t offTime;
   uint32_t onTime2;
   uint32_t offTime2;
+  uint32_t onTime3;
+  uint32_t offTime3;
   uint32_t offset;
   struct typeUNION{
     byte interval     :1;
-    byte interrupted  :1;
+    byte doubleI      :1;
+    byte tripleI      :1;
     byte dayTimer     :1;
     byte invert       :1;
   }type;
@@ -583,7 +586,7 @@ uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint3
 
 }
 
-byte InterruptedIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2){
+byte DoubleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2){
   // Check if 1st interval is valid
   if (IntervalTimer(timerIN, onTime, offTime, offset)){
     // Check if 2nd interval is valid
@@ -591,6 +594,23 @@ byte InterruptedIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTim
       return 1;
     }
   }
+  return 0;
+}
+
+byte TripleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2, uint32_t onTime3, uint32_t offTime3){
+  // Check if 1st interval is valid
+  if (IntervalTimer(timerIN, onTime, offTime, offset)){
+    // Check if 2nd Interval during OnTime is valid
+    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, 0)){
+      return 1;
+    }
+  }
+  else{
+    // Check if 3rd Interval during off-time is active
+    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset) - onTime, onTime3, offTime3, 0)){
+      return 1;
+    }
+  }  
   return 0;
 }
 
@@ -642,9 +662,13 @@ byte RunTimers(){
     }
     else if (runningTimers[i].type.interval){
       // Interval Timers
-      if (runningTimers[i].type.interrupted){
+      if (runningTimers[i].type.doubleI){
         // Interrupted version
-        r = InterruptedIntervalTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime, runningTimers[i].offset, runningTimers[i].onTime2, runningTimers[i].offTime2);
+        r = DoubleIntervalTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime, runningTimers[i].offset, runningTimers[i].onTime2, runningTimers[i].offTime2);
+      }
+      else if (runningTimers[i].type.tripleI){
+        // Interrupted version
+        r = TripleIntervalTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime, runningTimers[i].offset, runningTimers[i].onTime2, runningTimers[i].offTime2, runningTimers[i].onTime3, runningTimers[i].offTime3);
       }
       else{
         // Regular
