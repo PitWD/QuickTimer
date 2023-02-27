@@ -553,20 +553,20 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
     if (currentPos < onDuration){
       // On since -> until
       EscColor(fgGreen);
-      PrintSerTime(myTime - currentPos, 0);
+      PrintSerTime(myTime - currentPos - 1, 0);
       EscColor(39);
       Serial.print(F(" - "));
       EscColor(fgRed);
-      PrintSerTime((myTime - currentPos) + onDuration, 0);
+      PrintSerTime((myTime - currentPos) + onDuration - 1, 0);
     }
     else{
       // Off since -> until
       EscColor(fgRed);
-      PrintSerTime(myTime - currentPos + onDuration, 0);
+      PrintSerTime(myTime - currentPos + onDuration - 1, 0);
       EscColor(39);
       Serial.print(F(" - "));
       EscColor(fgGreen);
-      PrintSerTime((myTime - currentPos) + interval, 0);
+      PrintSerTime((myTime - currentPos) + interval - 1, 0);
     }
     EscColor(39);
     PrintSpacer(0);
@@ -1096,7 +1096,7 @@ void PrintLoopMenu(){
     if (r){
       EscLocate(5, pos);
       PrintMenuKey((char)(65 + i), 0, ' ');
-      TimerFromRomRam(i, 0);
+      TimerFromRomRam(i, 1);
       PrintTimerLine1(i, 9, pos++);
     }
     r = 1;
