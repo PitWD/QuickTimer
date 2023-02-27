@@ -42,13 +42,15 @@
 #else
   byte escFaintDeleteColor = 39;
   char escFaintIsActive = 0;
+  byte fgFaint = 90;
+  /*
   #if ESC_SOLARIZED
     #define fgFaint 92
   #else
     #define fgFaint 90
   #endif
+  */
 #endif
-
 
 void EscBold(byte set);
 

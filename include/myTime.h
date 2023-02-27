@@ -97,7 +97,7 @@ void TimerToRomRam(byte timer, byte rom){
 }
 
 char ByteToChar(byte valIN){
-    // Keep Bit-Pattern
+    // Keeps the Bit-Pattern but NOT the VALUE
     if (valIN > 127){
         return (char)(valIN - 256);
     }
@@ -387,15 +387,68 @@ uint32_t StrToTime(char *timeIN){
         i++;
     }
     if (i != 3) {
-        hour = 0;
-        minute = 0;
-        second = 0;
         return 0;
     }
     return ((long)hour * 3600) + (minute * 60) + (second);
 }
 
+uint32_t StrToDate(char *dateIN){
+    char *token;
+    int i = 0;
+    byte day = 0;
+    byte month = 0;
+    uint16_t year = 0;
+    token = strtok(dateIN, ".");
+    while (token != NULL && i < 3) {
+        int t = atoi(token);
+        if (t < 0 ) {
+            return 0;
+        }
+        if (i == 0 && t > 31) {
+            return 0;
+        }
+        if (i == 0) {
+            day = t;
+        } else if (i == 1) {
+            month = t;
+        } else if (i == 2) {
+            year = t;
+        }
+        token = strtok(NULL, ".");
+        i++;
+    }
+    if (i != 3) {
+        return 0;
+    }
+    return SerializeTime(day, month, year, 0 , 0 ,0);
+}
+
+void DayTimeToStr(byte hour, byte minute, byte second){
+  IntToStr((long)hour * 1000, 2, 0, '0');
+  strcpy(strHLP2, strHLP);
+  strHLP2[2] = ':';
+  IntToStr((long)minute * 1000, 2, 0, '0');
+  strcpy(strHLP2 + 3, strHLP);
+  strHLP2[5] = ':';
+  IntToStr((long)second * 1000, 2, 0, '0');
+  strcpy(strHLP2 + 6, strHLP);
+  strHLP2[8] = 0;
+}
+
+void DateToStr(byte day, byte month, uint16_t year){
+  IntToStr((long)day * 1000, 2, 0, '0');
+  strcpy(strHLP2, strHLP);
+  strHLP2[2] = '.';
+  IntToStr((long)month * 1000, 2, 0, '0');
+  strcpy(strHLP2 + 3, strHLP);
+  strHLP2[5] = '.';
+  IntToStr((long)year * 1000, 4, 0, '0');
+  strcpy(strHLP2 + 6, strHLP);
+  strHLP2[10] = 0;
+}
+
 void PrintHlpTime(byte hourIN, byte minIN, byte secIN){
+    /*
     IntToStr((long)hourIN * 1000,2,0,'0');
     Serial.print(strHLP);
     Serial.print(F(":"));
@@ -403,10 +456,13 @@ void PrintHlpTime(byte hourIN, byte minIN, byte secIN){
     Serial.print(strHLP);
     Serial.print(F(":"));
     IntToStr((long)secIN * 1000,2,0,'0');
-    Serial.print(strHLP);
+    */
+    DayTimeToStr(hourIN, minIN, secIN);
+    Serial.print(strHLP2);
 }
 
 void PrintHlpDate(byte dayIN, byte monthIN, uint16_t yearIN){
+    /*
     IntToStr((long)dayIN * 1000,2,0,'0');
     Serial.print(strHLP);
     Serial.print(F("."));
@@ -415,23 +471,32 @@ void PrintHlpDate(byte dayIN, byte monthIN, uint16_t yearIN){
     Serial.print(F("."));
     IntToStr((long)yearIN * 1000,4,0,'0');
     Serial.print(strHLP);
+    */
+    DateToStr(dayIN, monthIN, yearIN);
+    Serial.print(strHLP2);
+}
+
+void SerialDateToStr(uint32_t timeIN){
+  byte day = 0;
+  byte month = 0;
+  uint16_t year = 0;
+  DeSerializeTime(timeIN, &day, &month, &year, NULL, NULL, NULL);
+  DateToStr(day, month, year);
 }
 
 void SerialDayTimeToStr(uint32_t timeIN){
+  byte hour = 0;
+  byte minute = 0;
+  byte second = 0;
+  DeSerializeTime(timeIN, NULL, NULL, NULL, &hour, &minute, &second);
+/*
   timeIN = timeIN % 86400UL;
   int hours = timeIN / 3600UL;
   timeIN = timeIN % 3600UL;
   byte minutes = timeIN / 60;
   byte seconds = timeIN % 60;
-  IntToStr((long)hours * 1000, 2, 0, '0');
-  strcpy(strHLP2, strHLP);
-  strHLP2[2] = ':';
-  IntToStr((long)minutes * 1000, 2, 0, '0');
-  strcpy(strHLP2 + 3, strHLP);
-  strHLP2[5] = ':';
-  IntToStr((long)seconds * 1000, 2, 0, '0');
-  strcpy(strHLP2 + 6, strHLP);
-  strHLP2[8] = 0;
+*/
+  DayTimeToStr(hour, minute, second);
 }
 
 void PrintSerTime(uint32_t timeIN, byte d){
@@ -441,17 +506,21 @@ void PrintSerTime(uint32_t timeIN, byte d){
   if (d){
     days = timeIN / 86400UL;
   }
+  /*
   timeIN = timeIN % 86400UL;
   int hours = timeIN / 3600UL;
   timeIN = timeIN % 3600UL;
   byte minutes = timeIN / 60;
   byte seconds = timeIN % 60;
+  */
   if (d){
     IntToStr(days * 1000, 3, 0, ' ');
     Serial.print(strHLP);
     Serial.print(F("d "));
   }
-  PrintHlpTime((byte)hours, minutes, seconds);
+  SerialDayTimeToStr(timeIN);
+  Serial.print(strHLP2);
+  // PrintHlpTime((byte)hours, minutes, seconds);
 }
 
 void PrintTime(){

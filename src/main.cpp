@@ -2,11 +2,11 @@
 
 #define WIRE Wire
 
-// Seconds between RTC sync's (0 disables sync)
-#define syncRTCinterval 0
 
 void setup() {
   // put your setup code here, to run once:
+
+  myFromRom();
 
   Serial.begin(mySpeed);
 

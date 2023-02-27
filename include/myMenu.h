@@ -4,6 +4,61 @@
 
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
 uint32_t mySpeed = 9600;
+byte mySolarized = 0;
+
+byte IsSerialSpeedValid(uint32_t speed){
+    switch (speed){
+    case 1200:
+    case 2400:
+    case 4800:
+    case 9600:
+    case 14400:
+    case 19200:
+    case 28800:
+    case 38400UL:
+    case 57600UL:
+    case 115200UL:
+      // valid
+      return 1;
+      break;
+    default:
+      // illegal
+      return 0;
+      break;
+    }
+}
+
+void myToRom(){
+  EEPROM.put(1000, myBoot);
+  EEPROM.put(1001, mySolarized);
+  EEPROM.put(1002, myAddress);
+  EEPROM.put(1003, mySpeed);
+  // 1007 is next...
+}
+
+void myFromRom(){
+  EEPROM.get(1000, myBoot);
+  EEPROM.get(1001, mySolarized);
+  EEPROM.get(1002, myAddress);
+  EEPROM.get(1003, mySpeed);
+  // 1007 is next...
+
+  if (!IsSerialSpeedValid(mySpeed)){
+    mySpeed = 9600;
+  }
+  if (!myAddress || myAddress > 254){
+    myAddress = 123;
+  }
+  if (mySolarized){
+    fgFaint = 92;
+  }
+  else{
+    fgFaint = 90;
+  }
+  
+  
+  
+}
 
 long exp10(int e){
   long x = 1;
@@ -212,6 +267,12 @@ uint32_t GetUserTime(uint32_t timeIN){
   SerialDayTimeToStr(timeIN);
   GetUserString(strHLP2);
   return StrToTime(strHLP);
+}
+
+uint32_t GetUserDate(uint32_t timeIN){
+  SerialDateToStr(timeIN);
+  GetUserString(strHLP2);
+  return StrToDate(strHLP);
 }
 
 char GetUserKey(byte maxChar, byte noCnt){
@@ -512,29 +573,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
   }
 }
 
-/*
-void PrintTimerLineShort(byte timer){
-  // attach Properties list (up to 34 chars) on actual cursor-pos
-  if (runningTimers[timer].type.interval || runningTimers[timer].type.interrupted || runningTimers[timer].type.dayTimer){
-    PrintSerTime(runningTimers[timer].onTime, 0);
-    Serial.print(F("|"));
-    PrintSerTime(runningTimers[timer].offTime, 0);
-    Serial.print(F("|"));
-  }  
-  if (runningTimers[timer].type.interrupted){
-    PrintSerTime(runningTimers[timer].offset, 0);
-    Serial.print(F("|"));
-    PrintSerTime(runningTimers[timer].onTime2, 0);
-    Serial.print(F("|"));
-    PrintSerTime(runningTimers[timer].offTime2, 0);
-  }
-  else if (runningTimers[timer].type.interval){
-    PrintSerTime(runningTimers[timer].offset, 0);
-  }
-  Serial.print(F(" |"));
-}
-*/
-
 byte PrintTimerTable(byte timer, byte posX, byte posY){
   
   byte r = 0;
@@ -598,7 +636,9 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
   EscRestoreCursor();
   EscCursorDown(1);
   EscSaveCursor();
+  EscBold(1);
   PrintLine(0, 0, 57);
+  EscBold(0);
   EscRestoreCursor();
   EscCursorDown(1);
   EscSaveCursor();
@@ -704,134 +744,6 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
   return r2;
 }
 
-void PrintDateTimeMenu(){
-
-  char pos = PrintMenuTop((char*)"                             - Edit Date & Time -                               ") + 1;
-  long r = 0;
-  PrintErrorOK(0, -1 ,(char*)"Set Date & Time...");
-Start:
-
-  pos = 3;
-
-  EscLocate(8, pos++);
-  Serial.print(F("A):    Day: "));
-  PrintBoldValue((long)((long)myDay * 1000), 4, 0, ' ');
-  EscLocate(8, pos++);
-  Serial.print(F("B):  Month: "));
-  PrintBoldValue((long)((long)myMonth * 1000), 4, 0, ' ');
-  EscLocate(8, pos++);
-  Serial.print(F("C):   Year: "));
-  PrintBoldValue((long)((long)myYear * 1000), 4, 0, ' ');
-  EscLocate(8, pos++);
-  Serial.print(F("D):   Hour: "));
-  PrintBoldValue((long)((long)myHour * 1000), 4, 0, ' ');
-  EscLocate(8, pos++);
-  Serial.print(F("E): Minute: "));
-  PrintBoldValue((long)((long)myMin * 1000), 4, 0, ' ');
-  EscLocate(8, pos++);
-  Serial.print(F("F): Second: "));
-  PrintBoldValue((long)((long)mySec * 1000), 4, 0, ' ');
-
-  PrintMenuEnd(pos + 1);
-  Serial.print(F("        "));
-  EscCursorLeft(8);
-
-  pos = GetUserKey('f', -1);
-
-  switch (pos){
-  case -1:
-    // TimeOut
-  case 0:
-    // EXIT
-    pos = -1;
-    break;
-  case 'a':
-    r = GetUserVal(myDay, 0);
-    if (r > 0 && r <= GetDaysOfMonth(myMonth, myYear)){
-      // Valid Day
-      myDay = r;
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Illegal Day in this Month");
-      pos = 0;
-    }    
-    break;
-  case 'b':
-    r = GetUserVal(myMonth, 0);
-    if (r > 0 && r < 13 && myDay <= GetDaysOfMonth(r, myYear)){
-      // Valid Month
-      myMonth = r;
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Illegal Month with this Day/Year");
-      pos = 0;
-    }
-    break;
-  case 'c':
-    r = GetUserVal(myYear, 0);
-    if (r > 2022 && r < 2138 && myDay <= GetDaysOfMonth(myMonth, r)){
-      // Valid Year
-      myYear = r;
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Illegal Year with this Day/Month");
-      pos = 0;
-    }
-    break;
-  case 'd':
-    r = GetUserVal(myHour, 0);
-    if (r > -1 && r < 24){
-      // Valid Hour
-      myHour = r;
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Illegal Hour");
-      pos = 0;
-    }
-    break;
-  case 'e':
-    r = GetUserVal(myMin, 0);
-    if (r > -1 && r < 60){
-      // Valid Minute
-      myMin = r;
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Illegal Minute");
-      pos = 0;
-    }
-    break;
-  case 'f':
-    r = GetUserVal(mySec, 0);
-    if (r > -1 && r < 60){
-      // Valid Second
-      mySec = r;
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Illegal Second");
-      pos = 0;
-    }
-    break;
-  default:
-    // BS
-    pos = 0;
-    break;
-  }
-  if (pos > 0){
-    myTime = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
-    if (RTC_SetDateTime()){
-      /* code */
-      PrintErrorOK(1, -1, (char*)"RTC is set, too...");
-    }
-    else{
-      PrintErrorOK(-1, -1, (char*)"Couldn't set RTC...");
-    }
-  }
-  if (pos > -1){
-    goto Start;
-  }
-  
-}
-
 void PrintEditMenu(byte timer){
 
   uint32_t tempTime = 900;
@@ -862,7 +774,7 @@ Start:
   if (runningTimer.type.doubleI){
     EscBold(1);
   }  
-  Serial.print(F("DoubleI Timer    "));
+  Serial.print(F("DoubleI Timer     "));
 
   PrintMenuKey('C', 0, 0);
   if (runningTimer.type.tripleI){
@@ -1159,7 +1071,7 @@ Start:
 void PrintLoopMenu(){
 
   byte r = 1;
-  byte pos = PrintMenuTop((char*)"                                - QuickTimer 1.00 -                             ");
+  byte pos = PrintMenuTop((char*)"                                - QuickTimer 1.01 -                             ");
   EscCursorVisible(0);
   pos += 2;
 
@@ -1202,7 +1114,10 @@ void PrintMainMenu(){
 
 Start:
 
-  char pos = PrintMenuTop((char*)"                         - Main Menu QuickTimer 1.00 -                          ");
+  char pos = PrintMenuTop((char*)"                         - Main Menu QuickTimer 1.01 -                          ");
+  
+  uint32_t hlpDate = 0;
+  uint32_t hlpTime = 0;
   
   for (int i = 0; i < RUNNING_TIMERS_CNT; i++){
     pos++;
@@ -1217,20 +1132,24 @@ Start:
   EscLocate(5, pos);
   PrintMenuKey('1', 0, 0);
   Serial.print(F("ReBoot"));
-  EscLocate(19, pos);
+  EscLocate(18, pos);
   PrintMenuKey('2', 0, 0);
-  Serial.print(F("SetDate"));
-  EscLocate(34, pos);
+  Serial.print(F("Date"));
+  EscLocate(29, pos);
   PrintMenuKey('3', 0, 0);
-  Serial.print(F("SetTime"));
-  EscLocate(49, pos++);
+  Serial.print(F("Time"));
+  EscLocate(40, pos);
   PrintMenuKey('4', 0, 0);
-  Serial.print(F("SetSpeed = "));
+  Serial.print(F("Address = "));
+  PrintBoldValue((long)myAddress * 1000, 3, 0, '0');
+  EscLocate(60, pos++);
+  PrintMenuKey('5', 0, 0);
+  Serial.print(F("Speed = "));
   EscBold(1);
   Serial.print(mySpeed);
-
+  
   EscLocate(5, pos);
-  PrintMenuKey('5', 0, 0);
+  PrintMenuKey('6', 0, 0);
   Serial.print(F("Boot4Terminal = "));
   if (myBoot){
     EscFaint(1);
@@ -1243,7 +1162,7 @@ Start:
     EscLocate(33, pos);
   }
   EscBold(0);
-  PrintMenuKey('6', 0, 0);
+  PrintMenuKey('7', 0, 0);
   Serial.print(F("Boot4Slave = "));
   if (myBoot){
     EscBold(1);
@@ -1256,13 +1175,19 @@ Start:
     EscLocate(59, pos++);
   }
   EscBold(0);
-  PrintMenuKey('7', 0, 0);
-  Serial.print(F("Address = "));
-  PrintBoldValue((long)myAddress * 1000, 3, 0, '0');
-  
+  PrintMenuKey('8', 0, 0);
+  if (mySolarized){
+    EscBold(1);
+  }
+  else{
+    EscFaint(1);
+  }
+  Serial.print(F("Sol.Color"));
+  EscBold(0);
+
   PrintMenuEnd(pos + 1);
 
-  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 6);
+  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 8);
   switch (pos){
   case -1:
     // TimeOut
@@ -1273,24 +1198,62 @@ Start:
     // ReBoot
     break;
   case '2':
-    // Boot for Terminal
+    // Set Date
+    hlpDate = SerializeTime(1, 1, 2023, myHour, myMin, mySec);    // Time of now
+    DeSerializeTime(hlpDate + GetUserDate(myTime), &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
+    RTC_SetDateTime();
+    myTime = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
     break;
   case '3':
-    // Boot for Slave
+    // Set Time
+    hlpTime = SerializeTime(myDay, myMonth, myYear, 0, 0, 0);    // Midnight of today
+    DeSerializeTime(hlpTime + GetUserTime(myTime), &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
+    RTC_SetDateTime();
+    myTime = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
     break;
   case '4':
-    // Slave Address
+    // Set Address
+    myAddress = GetUserVal(myAddress, 0);
+    if (!myAddress || myAddress > 254){
+      // illegal address - reload from eeprom
+      myFromRom();
+    }
+    else{
+      // save to eeprom...
+      myToRom();
+    }
     break;
   case '5':
-    // Set Date & Time
-    PrintDateTimeMenu();
-    break;
-  case '6':
     // Set Speed
+    mySpeed = GetUserVal(mySpeed, 0);
+    if (IsSerialSpeedValid(mySpeed)){ 
+      // valid - save to eeprom
+      myToRom();
+    }
+    else{
+      // illegal - reload from eeprom
+      myFromRom();
+    }
+    break;    
+  case '6':
+    // Boot Terminal
+    break;
+  case '7':
+    // Boot Slave
+    break;
+  case '8':
+    // Use Solarized Color-Hack
+    mySolarized = !mySolarized;
+    if (mySolarized){
+      fgFaint = 92;
+    }
+    else{
+      fgFaint = 90;
+    }
+    // Save to eeprom
+    myToRom();
     break;
   case '0':
-  case '7':
-  case '8':
   case '9':
     // NA
     break;
