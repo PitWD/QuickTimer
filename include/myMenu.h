@@ -1,7 +1,6 @@
 
 #include "myIIC.h"
 #include "myTime.h"
-#include <EEPROM.h>
 
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
 uint32_t mySpeed = 9600;
@@ -259,7 +258,9 @@ char GetUserKey(byte maxChar, byte noCnt){
 }
 
 byte PrintLine(byte pos, byte start, byte len){
-  EscLocate(start, pos++);
+  if (pos && start){
+    EscLocate(start, pos++);
+  }
   for (int i = 0; i < len; i++){
     Serial.print(F("-"));
   }
@@ -322,7 +323,21 @@ void PrintMenuKey(char key, char leadChar, char trailChar){
   }
 }
 
+void PrintMenuNo(byte number, byte bold){
+  EscBold(1);
+  Serial.print(F(" "));
+  EscUnder(1);
+  Serial.print(F("("));
+  Serial.print(number);
+  Serial.print(F(")"));
+  EscUnder(0);
+  if (!bold){
+    EscBold(0);
+  }
+}
+
 void PrintTimerLine1(byte timer, byte posX, byte posY){
+
 
   if (posX && posY){
     EscLocate(posX, posY);
@@ -330,22 +345,25 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
     
   // Name 16 chars
   EscBold(1);
-  Serial.print(runningTimers[timer].name);
+  Serial.print(runningTimer.name);
   EscBold(0);
-  byte len = 16 - strlen(runningTimers[timer].name);
+  byte len = 16 - strlen(runningTimer.name);
   while (len--){
     Serial.print(F(" "));
   }
   Serial.print(F("| "));
 
   // Type 11 chars
-  if (runningTimers[timer].type.interrupted == 1){
+  if (runningTimer.type.tripleI == 1){
+    Serial.print(F("InterIII"));
+  }
+  else if (runningTimer.type.doubleI == 1){
     Serial.print(F("Inter-II"));
   }
-  else if (runningTimers[timer].type.interval == 1){
+  else if (runningTimer.type.interval == 1){
     Serial.print(F("Interval"));
   }
-  else if (runningTimers[timer].type.dayTimer == 1){
+  else if (runningTimer.type.dayTimer == 1){
     Serial.print(F("  24h   "));
   }
   else{
@@ -356,27 +374,27 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
   PrintSpacer(0);
   
   // Check on automatic permanent & temporary state 9 chars
-  if (runningTimers[timer].state.permOff){
+  if (runningTimer.state.permOff){
     EscBold(1);
     EscColor(fgRed);
     Serial.print(F("perm.OFF"));
   }
-  else if (runningTimers[timer].state.permOn){
+  else if (runningTimer.state.permOn){
     EscBold(1);
     EscColor(fgGreen);
     Serial.print(F("perm. ON"));
   }
-  else if (runningTimers[timer].state.tempOff && myTime < runningTimers[timer].tempUntil){
+  else if (runningTimer.state.tempOff && myTime < runningTimer.tempUntil){
     EscFaint(1);
     EscColor(fgRed);
     Serial.print(F("temp.OFF"));
   }
-  else if (runningTimers[timer].state.tempOn && myTime < runningTimers[timer].tempUntil){
+  else if (runningTimer.state.tempOn && myTime < runningTimer.tempUntil){
     EscFaint(1);
     EscColor(fgGreen);
     Serial.print(F("temp. ON"));
   }
-  else if (runningTimers[timer].state.automatic){
+  else if (runningTimer.state.automatic){
     EscBold(1);
     Serial.print(F("  auto  "));
   }
@@ -391,28 +409,28 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
 
 
   // On / Off / N/A 3 chars
-  if (runningTimers[timer].state.permOff){
+  if (runningTimer.state.permOff){
     EscBold(1);
     EscColor(fgRed);
     Serial.print(F("OFF"));
   }
-  else if (runningTimers[timer].state.permOn){
+  else if (runningTimer.state.permOn){
     EscBold(1);
     EscColor(fgGreen);
     Serial.print(F(" ON"));
   }
-  else if (runningTimers[timer].state.tempOff && myTime < runningTimers[timer].tempUntil){
+  else if (runningTimer.state.tempOff && myTime < runningTimer.tempUntil){
     EscFaint(1);
     EscColor(fgRed);
     Serial.print(F("OFF"));
   }
-  else if (runningTimers[timer].state.tempOn && myTime < runningTimers[timer].tempUntil){
+  else if (runningTimer.state.tempOn && myTime < runningTimer.tempUntil){
     EscFaint(1);
     EscColor(fgGreen);
     Serial.print(F(" ON"));
   }
-  else if (runningTimers[timer].state.automatic){
-    if (runningTimers[timer].state.lastVal){
+  else if (runningTimer.state.automatic){
+    if (runningTimer.state.lastVal){
       EscColor(fgGreen);
       Serial.print(F(" ON"));
     }
@@ -435,38 +453,38 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
   uint32_t offset;
   uint32_t currentPos;
   uint32_t interval;
-  if (runningTimers[timer].state.permOn || runningTimers[timer].state.permOff){
+  if (runningTimer.state.permOn || runningTimer.state.permOff){
     // Permanent On/Off
     EscFaint(1);
     Serial.print(F("        N/A        "));
     PrintSpacer(0);
   }
-  else if (runningTimers[timer].state.tempOn || runningTimers[timer].state.tempOff){
+  else if (runningTimer.state.tempOn || runningTimer.state.tempOff){
     // Temporary On/Off
     Serial.print(F("     "));
-    PrintSerTime(runningTimers[timer].tempUntil,0);
+    PrintSerTime(runningTimer.tempUntil,0);
     Serial.print(F("      "));
     PrintSpacer(0);
   }
-  else if (runningTimers[timer].state.automatic){
+  else if (runningTimer.state.automatic){
     // Automatic
-    if (runningTimers[timer].type.dayTimer){
+    if (runningTimer.type.dayTimer){
       // 24h Day-Timer
-      if (runningTimers[timer].offTime < runningTimers[timer].onTime){
+      if (runningTimer.offTime[0] < runningTimer.onTime[0]){
         // Midnight Jump
-        onDuration = (86400UL - runningTimers[timer].onTime) + runningTimers[timer].offTime;
+        onDuration = (86400UL - runningTimer.onTime[0]) + runningTimer.offTime[0];
       }
       else{
-        onDuration = runningTimers[timer].offTime - runningTimers[timer].onTime;
+        onDuration = runningTimer.offTime[0] - runningTimer.onTime[0];
       }
       offDuration = 86400UL - onDuration;
-      offset = runningTimers[timer].onTime;
+      offset = runningTimer.onTime[0];
     }
     else{
-      // Interval (both)
-      onDuration = runningTimers[timer].onTime;
-      offDuration = runningTimers[timer].offTime;
-      offset = runningTimers[timer].offset;
+      // Interval (all)
+      onDuration = runningTimer.onTime[0];
+      offDuration = runningTimer.offTime[0];
+      offset = runningTimer.offset[0];
     }
     
     currentPos = CurrentIntervalPos(myTime, onDuration, offDuration, offset);
@@ -494,6 +512,7 @@ void PrintTimerLine1(byte timer, byte posX, byte posY){
   }
 }
 
+/*
 void PrintTimerLineShort(byte timer){
   // attach Properties list (up to 34 chars) on actual cursor-pos
   if (runningTimers[timer].type.interval || runningTimers[timer].type.interrupted || runningTimers[timer].type.dayTimer){
@@ -514,77 +533,175 @@ void PrintTimerLineShort(byte timer){
   }
   Serial.print(F(" |"));
 }
+*/
 
-void PrintTimerLineHeader(byte timer, byte posX, byte posY){
+byte PrintTimerTable(byte timer, byte posX, byte posY){
+  
+  byte r = 0;
+  byte r2 = 3;
+
   if (posX && posY){
+    // Top Left 
     EscLocate(posX, posY);
   }
-  if (runningTimers[timer].type.interval || runningTimers[timer].type.interrupted || runningTimers[timer].type.dayTimer){
-    // A timer is set
-    EscBold(1);
-    Serial.print(F("On-Time "));
-    PrintSpacer(1);
-    Serial.print(F("Off-Time"));
-    EscSaveCursor();
-    PrintLine(posY + 1, posX, 21);
-    EscRestoreCursor();
-    EscBold(0);
-  }  
-  if (runningTimers[timer].type.interrupted){
-    PrintSpacer(1);
-    Serial.print(F(" Offset "));
-    PrintSpacer(1);
-    Serial.print(F("OnTime-2"));
-    PrintSpacer(1);
-    Serial.print(F("OffTime2"));
-    EscSaveCursor();
-    PrintLine(posY + 1, posX + 21, 33);
-    EscRestoreCursor();
-    EscBold(0);
-  }
-  else if (runningTimers[timer].type.interval){
-    PrintSpacer(1);
-    Serial.print(F(" Offset "));
-    EscSaveCursor();
-    PrintLine(posY + 1, posX + 21, 11);
-    EscRestoreCursor();
-    EscBold(0);
-  }
-  PrintSpacer(0);
-}
 
-void PrintTimerLineLong(byte timer, byte posX, byte posY){
-  // attach Properties list (up to 34 chars) on actual cursor-pos
-  if (posX && posY){
-    EscLocate(posX, posY);
+  //           1         2         3         4         5         6
+  // 1234567890123456789012345678901234567890123456789012345678901234567890
+  // -------------------------------------------------------------------------------
+  //            |     Main     |   whileON    |   whileOFF   |
+  // ---------------------------------------------------------
+  // |  OnTime: | 00:00:00 (1) | 00:00:00 (4) | 00:00:00 (7) |
+  // ---------------------------------------------------------
+  // | OffTime: | 00:00:00 (2) | 00:00:00 (5) | 00:00:00 (8) |
+  // ---------------------------------------------------------
+  // |  Offset: | 00:00:00 (3) | 00:00:00 (6) | 00:00:00 (9) |
+  // ---------------------------------------------------------
+
+
+  if (runningTimer.type.dayTimer){
+    // DayTimer
+    r = 1;
   }
-  if (runningTimers[timer].type.interval || runningTimers[timer].type.interrupted || runningTimers[timer].type.dayTimer){
-    PrintSerTime(runningTimers[timer].onTime, 0);
-    PrintSpacer(0);
-    PrintSerTime(runningTimers[timer].offTime, 0);
-    EscSaveCursor();
-    PrintLine(posY + 1, posX, 21);
-    EscRestoreCursor();
-  }  
-  if (runningTimers[timer].type.interrupted){
-    PrintSpacer(0);
-    PrintSerTime(runningTimers[timer].offset, 0);
-    PrintSpacer(0);
-    PrintSerTime(runningTimers[timer].onTime2, 0);
-    PrintSpacer(0);
-    PrintSerTime(runningTimers[timer].offTime2, 0);
-    EscSaveCursor();
-    PrintLine(posY + 1, posX + 21, 33);
-    EscRestoreCursor();
+  else if (runningTimer.type.interval){
+    // Interval
+    r = 2;
+    if (runningTimer.type.doubleI || runningTimer.type.tripleI){
+      // Double
+      r++;
+      if (runningTimer.type.tripleI){
+        // Triple
+        r++;
+      }
+    }
   }
-  else if (runningTimers[timer].type.interval){
-    PrintSpacer(0);
-    PrintSerTime(runningTimers[timer].offset, 0);
-    EscSaveCursor();
-    PrintLine(posY + 1, posX + 21, 11);
-    EscRestoreCursor();
+  
+  // Top-Line
+  EscSaveCursor();
+  if (r > 0){
+    // 24h & Interval
+    EscCursorRight(10);
+    PrintSpacer(1);
+    Serial.print(F("    Main    "));
+    PrintSpacer(1);
+    r2 = 6;
   }
-  PrintSpacer(0);
+  if (r > 2){
+    // double & triple
+    Serial.print(F("  while ON  "));
+    PrintSpacer(1);
+  }
+  if (r > 3){
+    // triple
+    Serial.print(F(" while OFF  "));
+    PrintSpacer(1);
+  }
+  EscRestoreCursor();
+  EscCursorDown(1);
+  EscSaveCursor();
+  PrintLine(0, 0, 57);
+  EscRestoreCursor();
+  EscCursorDown(1);
+  EscSaveCursor();
+  Serial.print(F("|"));
+  EscBold(1);
+
+  // OnTime-Line
+  if (r > 0){
+    // 24h & Interval
+    Serial.print(F("  OnTime"));
+    EscBold(0);
+    Serial.print(F(":"));
+    PrintSpacer(0);
+    PrintSerTime(runningTimer.onTime[0], 0);
+    PrintMenuNo(1, 0);
+    PrintSpacer(0);
+  }
+  if (r > 2){
+    // double & triple
+    PrintSerTime(runningTimer.onTime[1], 0);
+    PrintMenuNo(4, 0);
+    PrintSpacer(0);
+  }
+  if (r > 3){
+    // triple
+    PrintSerTime(runningTimer.onTime[2], 0);
+    PrintMenuNo(7, 0);
+    PrintSpacer(0);
+  }
+  EscRestoreCursor();
+  EscCursorDown(1);
+  EscSaveCursor();
+  PrintLine(0, 0, 57);
+  EscRestoreCursor();
+  EscCursorDown(1);
+  EscSaveCursor();
+  Serial.print(F("|"));
+  EscBold(1);
+
+  // OffTime-Line
+  if (r > 0){
+    // 24h & Interval
+    Serial.print(F(" OffTime"));
+    EscBold(0);
+    Serial.print(F(":"));
+    PrintSpacer(0);
+    PrintSerTime(runningTimer.offTime[0], 0);
+    PrintMenuNo(2, 0);
+    PrintSpacer(0);
+  }
+  if (r > 2){
+    // double & triple
+    PrintSerTime(runningTimer.offTime[1], 0);
+    PrintMenuNo(5, 0);
+    PrintSpacer(0);
+  }
+  if (r > 3){
+    // triple
+    PrintSerTime(runningTimer.offTime[2], 0);
+    PrintMenuNo(8, 0);
+    PrintSpacer(0);
+  }
+  EscRestoreCursor();
+  EscCursorDown(1);
+  EscSaveCursor();
+  PrintLine(0, 0, 57);
+  EscRestoreCursor();
+  EscCursorDown(1);
+  EscSaveCursor();
+  Serial.print(F("|"));
+  EscBold(1);
+
+  // Offset-Line
+  if (r > 1){
+    // Interval
+    Serial.print(F("  OffSet"));
+    EscBold(0);
+    Serial.print(F(":"));
+    PrintSpacer(0);
+    PrintSerTime(runningTimer.offset[0], 0);
+    PrintMenuNo(3, 0);
+    PrintSpacer(0);
+    r2++;
+  }
+  if (r > 2){
+    // double & triple
+    PrintSerTime(runningTimer.offset[1], 0);
+    PrintMenuNo(6, 0);
+    PrintSpacer(0);
+  }
+  if (r > 3){
+    // triple
+    PrintSerTime(runningTimer.offset[2], 0);
+    PrintMenuNo(9, 0);
+    PrintSpacer(0);
+  }
+  if (r > 1){
+    EscRestoreCursor();
+    EscCursorDown(1);
+    PrintLine(0, 0, 57);
+    r2++;
+  }
+  return r2;
 }
 
 void PrintDateTimeMenu(){
@@ -720,143 +837,62 @@ void PrintEditMenu(byte timer){
   uint32_t tempTime = 900;
   byte isChanged = 0;
 
+  TimerFromRomRam(timer, 1);
+
 Start:
 
   char pos = PrintMenuTop((char*)"                                - Edit-Timer -                                  ") + 1;
-
+  pos--;
   PrintLine(pos++, 4, 75);
   EscLocate(4, pos);
   PrintMenuKey('0', '(', ' ');
   PrintTimerLine1(timer, 10, pos++);
   PrintLine(pos++, 4, 75);
-  EscLocate(9, pos);
-  PrintSpacer(0);
-  PrintTimerLineHeader(timer, 12, pos++);
-  EscLocate(10, pos);
-  EscBold(1);
-  Serial.print(F("--"));
-  pos++;
-  EscLocate(9, pos);
-  PrintSpacer(0);
-  PrintTimerLineLong(timer, 12, pos++);
-  EscLocate(10, pos);
-  Serial.print(F("--"));
-  pos++;
-  EscLocate(9, pos);
-  PrintSpacer(0);
-  EscLocate(12, pos++);
-  if (runningTimers[timer].type.interval || runningTimers[timer].type.interrupted || runningTimers[timer].type.dayTimer){
-    // Timer is defined
-    EscBold(1);
-    Serial.print(F("  "));
-    EscUnder(1);
-    Serial.print(F("(1)"));
-    EscUnder(0);
-    Serial.print(F("   "));
-    PrintSpacer(1);
-    EscBold(1);
-    Serial.print(F("  "));
-    EscUnder(1);
-    Serial.print(F("(2)"));
-    EscUnder(0);
-    Serial.print(F("   "));
-  }  
-  if (runningTimers[timer].type.doubleI || runningTimers[timer].type.tripleI){
-    PrintSpacer(1);
-    EscBold(1);
-    Serial.print(F("  "));
-    EscUnder(1);
-    Serial.print(F("(3)"));
-    EscUnder(0);
-    Serial.print(F("   "));
-    PrintSpacer(1);
-    EscBold(1);
-    Serial.print(F("  "));
-    EscUnder(1);
-    Serial.print(F("(4)"));
-    EscUnder(0);
-    Serial.print(F("   "));
-    PrintSpacer(1);
-    EscBold(1);
-    Serial.print(F("  "));
-    EscUnder(1);
-    Serial.print(F("(5)"));
-    EscUnder(0);
-    Serial.print(F("   "));
 
-    if (runningTimers[timer].type.tripleI){
-      PrintSpacer(1);
-      EscBold(1);
-      Serial.print(F("  "));
-      EscUnder(1);
-      Serial.print(F("(6)"));
-      EscUnder(0);
-      Serial.print(F("   "));
-      PrintSpacer(1);
-      EscBold(1);
-      Serial.print(F("  "));
-      EscUnder(1);
-      Serial.print(F("(7)"));
-      EscUnder(0);
-      Serial.print(F("   "));
-    }
-    
-  }
-  else if (runningTimers[timer].type.interval){
-    PrintSpacer(1);
-    EscBold(1);
-    Serial.print(F("  "));
-    EscUnder(1);
-    Serial.print(F("(3)"));
-    EscUnder(0);
-    Serial.print(F("   "));
-  }
-  PrintSpacer(0);
-
-  PrintLine(pos++, 4, 75);
+  pos = pos + PrintTimerTable(timer, 11, pos);
 
   EscLocate(4, pos++);
   PrintMenuKey('A', 0, 0);
-  if (runningTimers[timer].type.interval && !runningTimers[timer].type.interrupted){
+  if (runningTimer.type.interval && !runningTimer.type.doubleI && !runningTimer.type.tripleI){
     EscBold(1);
   }
   Serial.print(F("Interval Timer     "));
   
   PrintMenuKey('B', 0, 0);
-  if (runningTimers[timer].type.interrupted){
+  if (runningTimer.type.doubleI){
     EscBold(1);
   }  
-  Serial.print(F("DoubleIntervalTimer    "));
+  Serial.print(F("DoubleI Timer    "));
 
   PrintMenuKey('C', 0, 0);
-  if (runningTimers[timer].type.interrupted){
+  if (runningTimer.type.tripleI){
     EscBold(1);
   }  
-  Serial.print(F("TripleIntervalTimer"));
-
-
-  PrintMenuKey('D', 0, 0);
-  if (runningTimers[timer].type.invert){
-    EscBold(1);
-  }
-  Serial.print(F("Inverted Port"));
+  Serial.print(F("TripleI Timer"));
   
   EscLocate(4, pos++);
-  PrintMenuKey('E', 0, 0);
-  if (runningTimers[timer].type.dayTimer){
+  PrintMenuKey('D', 0, 0);
+  if (runningTimer.type.dayTimer){
     EscBold(1);
   }
   Serial.print(F("24h-Day Timer      "));
+
+  PrintMenuKey('E', 0, 0);
+  if (runningTimer.type.invert){
+    EscBold(1);
+  }
+  Serial.print(F("Inverted Port     "));
+
   PrintMenuKey('F', 0, 0);
-  if (!runningTimers[timer].type.interval && !runningTimers[timer].type.interrupted && !runningTimers[timer].type.dayTimer){
+  if (!runningTimer.type.interval && !runningTimer.type.dayTimer){
     EscBold(1);
   }
   Serial.print(F("Disabled"));
   PrintShortLine(pos++, 4);
-  EscLocate(4, pos++);
   
+  EscLocate(4, pos++);
   PrintMenuKey('G',0,0);
-  if (!runningTimers[timer].weekDays){
+  if (!runningTimer.weekDays){
     EscBold(1);
   }
   else{
@@ -864,70 +900,71 @@ Start:
   }
   Serial.print(F("ALL  "));
   PrintMenuKey('H',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 1)){
+  if (!bitRead(runningTimer.weekDays, 1)){
     EscFaint(1);
   }
   Serial.print(F("Sun  "));
   PrintMenuKey('I',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 2)){
+  if (!bitRead(runningTimer.weekDays, 2)){
     EscFaint(1);
   }
   Serial.print(F("Mon  "));
   PrintMenuKey('J',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 3)){
+  if (!bitRead(runningTimer.weekDays, 3)){
     EscFaint(1);
   }
   Serial.print(F("TUE  "));
   PrintMenuKey('K',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 4)){
+  if (!bitRead(runningTimer.weekDays, 4)){
     EscFaint(1);
   }
   Serial.print(F("Wed  "));
   PrintMenuKey('L',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 5)){
+  if (!bitRead(runningTimer.weekDays, 5)){
     EscFaint(1);
   }
   Serial.print(F("Thu  "));
   PrintMenuKey('M',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 6)){
+  if (!bitRead(runningTimer.weekDays, 6)){
     EscFaint(1);
   }
   Serial.print(F("Fri  "));
   PrintMenuKey('N',0,0);
-  if (!bitRead(runningTimers[timer].weekDays, 7)){
+  if (!bitRead(runningTimer.weekDays, 7)){
     EscFaint(1);
   }
   Serial.print(F("Sat  "));  
-  //Serial.print(F("E): All  F): Sun  G): Mon  H): Tue  I): Wed  J): Thu  K): Fri  L): Sat"));
+
   PrintShortLine(pos++, 4);
   EscLocate(4, pos++);
   PrintMenuKey('O', 0, 0);
-  if (runningTimers[timer].state.automatic){
+  if (runningTimer.state.automatic){
     EscBold(1);
   }
   Serial.print(F("Automatic          "));
   PrintMenuKey('P', 0, 0);
-  if (runningTimers[timer].state.permOff){
+  if (runningTimer.state.permOff){
     EscBold(1);
   }
   Serial.print(F("Permanent OFF      "));
-  PrintMenuKey('B', 0, 0);
-  if (runningTimers[timer].state.permOn){
+  PrintMenuKey('Q', 0, 0);
+  if (runningTimer.state.permOn){
     EscBold(1);
   }
   Serial.print(F("Permanent ON"));
   PrintShortLine(pos++, 4);
   EscLocate(4, pos++);
   PrintMenuKey('R', 0, 0);
-  if (runningTimers[timer].state.tempOff){
+  if (runningTimer.state.tempOff){
     EscBold(1);
   }
   Serial.print(F("Temporary OFF      "));
   PrintMenuKey('S', 0, 0);
-  if (runningTimers[timer].state.tempOn){
+  if (runningTimer.state.tempOn){
     EscBold(1);
   }
   Serial.print(F("Temporary ON       "));
+  
   PrintMenuKey('T', 0, 0);
   Serial.print(F("SetTempTime: "));
   EscBold(1);
@@ -938,7 +975,7 @@ Start:
 
   PrintMenuEnd(pos + 1);
 
-  pos = GetUserKey('t', 5);
+  pos = GetUserKey('t', 9);
 
   switch (pos){
   case -1:
@@ -948,130 +985,160 @@ Start:
     break;
   case '0':
     // Name
-    GetUserString(runningTimers[timer].name);
-    strcpy(runningTimers[timer].name, strHLP);
+    GetUserString(runningTimer.name);
+    strcpy(runningTimer.name, strHLP);
     break;
   case '1':
     // OnTime
-    runningTimers[timer].onTime = GetUserTime(runningTimers[timer].onTime);
+    runningTimer.onTime[0] = GetUserTime(runningTimer.onTime[0]);
     break;
   case '2':
     // OffTime
-    runningTimers[timer].offTime = GetUserTime(runningTimers[timer].offTime);
+    runningTimer.offTime[0] = GetUserTime(runningTimer.offTime[0]);
     break;
   case '3':
     // Offset
-    runningTimers[timer].offset = GetUserTime(runningTimers[timer].offset);
+    runningTimer.offset[0] = GetUserTime(runningTimer.offset[0]);
     break;
   case '4':
-    // OnTime2
-    runningTimers[timer].onTime2 = GetUserTime(runningTimers[timer].onTime2);
+    // OnTime
+    runningTimer.onTime[1] = GetUserTime(runningTimer.onTime[1]);
     break;
   case '5':
-    // OffTime2
-    runningTimers[timer].offTime2 = GetUserTime(runningTimers[timer].offTime2);
+    // OffTime
+    runningTimer.offTime[1] = GetUserTime(runningTimer.offTime[1]);
+    break;
+  case '6':
+    // Offset
+    runningTimer.offset[1] = GetUserTime(runningTimer.offset[1]);
+    break;
+  case '7':
+    // OnTime
+    runningTimer.onTime[2] = GetUserTime(runningTimer.onTime[2]);
+    break;
+  case '8':
+    // OffTime
+    runningTimer.offTime[2] = GetUserTime(runningTimer.offTime[2]);
+    break;
+  case '9':
+    // Offset
+    runningTimer.offset[2] = GetUserTime(runningTimer.offset[2]);
     break;
   case 'a':
     // IntervalTimer
-    runningTimers[timer].type.interval = 1;
-    runningTimers[timer].type.interrupted = 0;
-    runningTimers[timer].type.dayTimer = 0;
+    runningTimer.type.interval = 1;
+    runningTimer.type.doubleI = 0;
+    runningTimer.type.tripleI = 0;
+    runningTimer.type.dayTimer = 0;
     break;
   case 'b':
     // Double IntervalTimer
-    runningTimers[timer].type.interval = 1;
-    runningTimers[timer].type.interrupted = 1;
-    runningTimers[timer].type.dayTimer = 0;
+    runningTimer.type.interval = 1;
+    runningTimer.type.doubleI = 1;
+    runningTimer.type.tripleI = 0;
+    runningTimer.type.dayTimer = 0;
     break;
   case 'c':
-    // 24h Timer
-    runningTimers[timer].type.interval = 0;
-    runningTimers[timer].type.interrupted = 0;
-    runningTimers[timer].type.dayTimer = 1;
+    // Triple IntervalTimer
+    runningTimer.type.interval = 1;
+    runningTimer.type.doubleI = 0;
+    runningTimer.type.tripleI = 1;
+    runningTimer.type.dayTimer = 0;
     break;
   case 'd':
-    // Disabled
-    runningTimers[timer].type.interval = 0;
-    runningTimers[timer].type.interrupted = 0;
-    runningTimers[timer].type.dayTimer = 0;
-    runningTimers[timer].state.automatic = 0;
+    // 24h Timer
+    runningTimer.type.interval = 0;
+    runningTimer.type.doubleI = 0;
+    runningTimer.type.tripleI = 0;
+    runningTimer.type.dayTimer = 1;
     break;
   case 'e':
-    // All Days
-    runningTimers[timer].weekDays = 0;
-    break;
+    // Inverted
+    runningTimer.type.invert = !runningTimer.type.invert;
   case 'f':
-    // Sunday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 1, !getBit(runningTimers[timer].weekDays, 1));
+    // Disabled
+    runningTimer.type.interval = 0;
+    runningTimer.type.doubleI = 0;
+    runningTimer.type.tripleI = 0;
+    runningTimer.type.dayTimer = 0;
+    runningTimer.state.automatic = 0;
     break;
   case 'g':
-    // Monday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 2, !getBit(runningTimers[timer].weekDays, 2));
+    // All Days
+    runningTimer.weekDays = 0;
     break;
   case 'h':
-    // Tuesday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 3, !getBit(runningTimers[timer].weekDays, 3));
+    // Sunday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 1, !getBit(runningTimer.weekDays, 1));
     break;
   case 'i':
-    // Wednesday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 4, !getBit(runningTimers[timer].weekDays, 4));
+    // Monday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 2, !getBit(runningTimer.weekDays, 2));
     break;
   case 'j':
-    // Thursday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 5, !getBit(runningTimers[timer].weekDays, 5));
+    // Tuesday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 3, !getBit(runningTimer.weekDays, 3));
     break;
   case 'k':
-    // Friday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 6, !getBit(runningTimers[timer].weekDays, 6));
+    // Wednesday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 4, !getBit(runningTimer.weekDays, 4));
     break;
   case 'l':
-    // Saturday
-    runningTimers[timer].weekDays = setBit(runningTimers[timer].weekDays, 7, !getBit(runningTimers[timer].weekDays, 7));
+    // Thursday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 5, !getBit(runningTimer.weekDays, 5));
     break;
   case 'm':
-    // Automatic
-    runningTimers[timer].state.automatic = 1;
-    runningTimers[timer].state.permOn = 0;
-    runningTimers[timer].state.permOff = 0;
-    runningTimers[timer].state.tempOn = 0;
-    runningTimers[timer].state.tempOff = 0;
-    runningTimers[timer].state.hasChanged = 1;
+    // Friday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 6, !getBit(runningTimer.weekDays, 6));
     break;
   case 'n':
-    // perm. Off
-    runningTimers[timer].state.automatic = 0;
-    runningTimers[timer].state.permOn = 0;
-    runningTimers[timer].state.permOff = 1;
-    runningTimers[timer].state.tempOn = 0;
-    runningTimers[timer].state.tempOff = 0;
-    runningTimers[timer].state.hasChanged = 1;
+    // Saturday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, 7, !getBit(runningTimer.weekDays, 7));
     break;
   case 'o':
-    // perm. On
-    runningTimers[timer].state.automatic = 0;
-    runningTimers[timer].state.permOn = 1;
-    runningTimers[timer].state.permOff = 0;
-    runningTimers[timer].state.tempOn = 0;
-    runningTimers[timer].state.tempOff = 0;
-    runningTimers[timer].state.hasChanged = 1;
+    // Automatic
+    runningTimer.state.automatic = 1;
+    runningTimer.state.permOn = 0;
+    runningTimer.state.permOff = 0;
+    runningTimer.state.tempOn = 0;
+    runningTimer.state.tempOff = 0;
+    runningTimer.state.hasChanged = 1;
     break;
   case 'p':
-    // temp off
-    runningTimers[timer].state.tempOff = 1;
-    runningTimers[timer].state.tempOn = 0;
-    runningTimers[timer].state.hasChanged = 1;
-    runningTimers[timer].tempUntil = myTime + tempTime;
-    pos = -1;
+    // perm. Off
+    runningTimer.state.automatic = 0;
+    runningTimer.state.permOn = 0;
+    runningTimer.state.permOff = 1;
+    runningTimer.state.tempOn = 0;
+    runningTimer.state.tempOff = 0;
+    runningTimer.state.hasChanged = 1;
     break;
   case 'q':
-    // temp on
-    runningTimers[timer].state.tempOn = 1;
-    runningTimers[timer].state.tempOff = 0;
-    runningTimers[timer].state.hasChanged = 1;
-    runningTimers[timer].tempUntil = myTime + tempTime;
-    pos = -1;
+    // perm. On
+    runningTimer.state.automatic = 0;
+    runningTimer.state.permOn = 1;
+    runningTimer.state.permOff = 0;
+    runningTimer.state.tempOn = 0;
+    runningTimer.state.tempOff = 0;
+    runningTimer.state.hasChanged = 1;
     break;
   case 'r':
+    // temp off
+    runningTimer.state.tempOff = 1;
+    runningTimer.state.tempOn = 0;
+    runningTimer.state.hasChanged = 1;
+    runningTimer.tempUntil = myTime + tempTime;
+    pos = -1;
+    break;
+  case 's':
+    // temp on
+    runningTimer.state.tempOn = 1;
+    runningTimer.state.tempOff = 0;
+    runningTimer.state.hasChanged = 1;
+    runningTimer.tempUntil = myTime + tempTime;
+    pos = -1;
+    break;
+  case 't':
     // set temporary time
     tempTime = GetUserTime(tempTime);
     break;
@@ -1085,7 +1152,7 @@ Start:
     goto Start;
   }  
   if (isChanged){
-    EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimers[timer]);
+    TimerToRomRam(timer, 1);
   }
 }
 
@@ -1100,15 +1167,15 @@ void PrintLoopMenu(){
 
   for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
     // Check state  
-    if (runningTimers[i].state.permOff){   
+    if (runningState[i].state.permOff){   
     }
-    else if (runningTimers[i].state.permOn){  
+    else if (runningState[i].state.permOn){  
     }
-    else if (runningTimers[i].state.tempOff && myTime < runningTimers[i].tempUntil){   
+    else if (runningState[i].state.tempOff && myTime < runningState[i].tempUntil){   
     }
-    else if (runningTimers[i].state.tempOn && myTime < runningTimers[i].tempUntil){ 
+    else if (runningState[i].state.tempOn && myTime < runningState[i].tempUntil){ 
     }
-    else if (runningTimers[i].state.automatic){
+    else if (runningState[i].state.automatic){
     }
     else{
       // Fully disabled
@@ -1117,6 +1184,7 @@ void PrintLoopMenu(){
     if (r){
       EscLocate(5, pos);
       PrintMenuKey((char)(65 + i), 0, ' ');
+      TimerFromRomRam(i, 0);
       PrintTimerLine1(i, 9, pos++);
     }
     r = 1;
@@ -1140,6 +1208,7 @@ Start:
     pos++;
     EscLocate(5, pos);
     PrintMenuKey((char)(65 + i), 0, ' ');
+    TimerFromRomRam(i, 1);
     PrintTimerLine1(i, 0, 0);
   }
 

@@ -16,33 +16,41 @@ void setup() {
   RTC_GetDateTime();
 
 // memset(runningTimers, 0, RUNNING_TIMERS_CNT * sizeof(TimerSTRUCT));
-EscCls();
-for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
-  EEPROM.get(i * sizeof(TimerSTRUCT), runningTimers[i]);
-  // Check on validity
-  if (strlen(runningTimers[i].name) == 0 || strlen(runningTimers[i].name) > 16){
-    // Undefined / New
-    Serial.print(F("Undefined Port/Timer : "));
-    Serial.println(i + 1);
-    memset(&runningTimers[i], 0, sizeof(TimerSTRUCT));
-    strcpy(runningTimers[i].name, "Default-");
-    runningTimers[i].name[8] = 'A' + i; 
-    runningTimers[i].name[9] = 0;
-    runningTimers[i].type.invert = 0;
-    EEPROM.put(i * sizeof(TimerSTRUCT), runningTimers[i]); 
-  }
-  // Set Output & StartValue
-  pinMode(i + 2, OUTPUT);
-  if (runningTimers[i].type.invert){
-    digitalWrite(i + 2, HIGH);
-  }
-  else{
-    digitalWrite(i + 2, LOW);
-  }
-  runningTimers[i].state.lastVal = 0;
-}
+  EscCls(); EscLocate(1,1);
+  for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
+    
+    // Clear linked temp memory
+    memset(&runningState[i], 0, sizeof(TimerStateSTRUCT));
+    
+    // Load 'all' from eeprom
+    TimerFromRomRam(i, 0);
+    // Copy rom-state to ram
+    TimerToRomRam(i, 0);
 
-PrintMainMenu();
+    // Check on validity (1st time boot...)
+    if (strlen(runningTimer.name) == 0 || strlen(runningTimer.name) > 16){
+      // Undefined / New
+      Serial.print(F("Undefined Port/Timer : "));
+      Serial.println(i + 1);
+      memset(&runningTimer, 0, sizeof(TimerSTRUCT));
+      strcpy(runningTimer.name, "Default-");
+      runningTimer.name[8] = 'A' + i; 
+      EEPROM.put(i * sizeof(TimerSTRUCT), runningTimer); 
+    }
+    
+    // Set Output & StartValue
+    pinMode(i + 2, OUTPUT);
+    if (runningTimer.type.invert){
+      digitalWrite(i + 2, HIGH);
+      runningState[i].state.lastVal = 1;
+    }
+    else{
+      digitalWrite(i + 2, LOW);
+      runningState[i].state.lastVal = 0;
+    }
+  }
+
+  PrintMainMenu();
 
 }
 
@@ -60,15 +68,15 @@ void loop() {
       pos = 5;
       for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
         // Check state  
-        if (runningTimers[i].state.permOff){   
+        if (runningState[i].state.permOff){   
         }
-        else if (runningTimers[i].state.permOn){  
+        else if (runningState[i].state.permOn){  
         }
-        else if (runningTimers[i].state.tempOff && myTime < runningTimers[i].tempUntil){   
+        else if (runningState[i].state.tempOff && myTime < runningState[i].tempUntil){   
         }
-        else if (runningTimers[i].state.tempOn && myTime < runningTimers[i].tempUntil){ 
+        else if (runningState[i].state.tempOn && myTime < runningState[i].tempUntil){ 
         }
-        else if (runningTimers[i].state.automatic){
+        else if (runningState[i].state.automatic){
         }
         else{
           // Fully disabled
@@ -76,10 +84,11 @@ void loop() {
         }
         if (r){
           // Port is valid
-          if (runningTimers[i].state.hasChanged){
+          if (runningState[i].state.hasChanged){
             // And has changed
+            TimerFromRomRam(i, 1);
             PrintTimerLine1(i, 9, pos);
-            digitalWrite(i + 2, runningTimers[i].state.lastVal);
+            digitalWrite(i + 2, runningState[i].state.lastVal);
           }
           pos++; 
         }

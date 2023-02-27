@@ -1,15 +1,12 @@
 #include <Arduino.h>
+#include <EEPROM.h>
 
 #define RUNNING_TIMERS_CNT 16
 
 struct TimerSTRUCT{
-  uint32_t onTime;
-  uint32_t offTime;
-  uint32_t onTime2;
-  uint32_t offTime2;
-  uint32_t onTime3;
-  uint32_t offTime3;
-  uint32_t offset;
+  uint32_t onTime[3];
+  uint32_t offTime[3];
+  uint32_t offset[3];
   struct typeUNION{
     byte interval     :1;
     byte doubleI      :1;
@@ -33,7 +30,20 @@ struct TimerSTRUCT{
   }state;
   uint32_t tempUntil;
   char name[17];
-}runningTimers[RUNNING_TIMERS_CNT];
+}runningTimer;
+
+struct TimerStateSTRUCT{
+  struct stateUNION{
+    byte automatic    :1;
+    byte permOff      :1;
+    byte permOn       :1;
+    byte tempOn       :1;
+    byte tempOff      :1;
+    byte lastVal      :1;
+    byte hasChanged   :1;
+  }state;
+  uint32_t tempUntil;
+}runningState[RUNNING_TIMERS_CNT];
 
 // global RunTime Timing
   byte myRunSec = 0;
@@ -52,10 +62,39 @@ struct TimerSTRUCT{
   uint32_t myTime = 0;
 
 // RTC-Temp
-  long myRtcTemp = 0;
+long myRtcTemp = 0;
 
 // Seconds between RTC sync's (0 disables sync
 #define syncRTCinterval 86400L
+
+void TimerFromRomRam(byte timer, byte ram){
+  // Load Timer
+  EEPROM.get(timer * sizeof(TimerSTRUCT), runningTimer);
+  if (ram){
+    // copy temporay stuff from ram, too
+    runningTimer.state.tempOff = runningState[timer].state.tempOff;
+    runningTimer.state.tempOn = runningState[timer].state.tempOn;
+    runningTimer.state.lastVal = runningState[timer].state.lastVal;
+    runningTimer.state.hasChanged = runningState[timer].state.hasChanged;
+    runningTimer.state.automatic = runningState[timer].state.automatic;
+    runningTimer.tempUntil = runningState[timer].tempUntil;
+  }
+  
+}
+
+void TimerToRomRam(byte timer, byte rom){
+  // Move the temporary stuff to ram
+  runningState[timer].state.tempOff = runningTimer.state.tempOff;
+  runningState[timer].state.tempOn = runningTimer.state.tempOn;
+  runningState[timer].state.lastVal = runningTimer.state.lastVal;
+  runningState[timer].state.hasChanged = runningTimer.state.hasChanged;
+  runningState[timer].state.automatic = runningTimer.state.automatic;
+  //runningState[timer].tempUntil = runningTimer.tempUntil;
+  if (rom){
+    // Save to eeprom, too...
+    EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimer);
+  }
+}
 
 char ByteToChar(byte valIN){
     // Keep Bit-Pattern
@@ -586,32 +625,65 @@ uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint3
 
 }
 
-byte DoubleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2){
+/*
+byte DoubleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2, uint32_t offset2){
   // Check if 1st interval is valid
   if (IntervalTimer(timerIN, onTime, offTime, offset)){
     // Check if 2nd interval is valid
-    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, 0)){
+    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, offset2)){
       return 1;
     }
   }
   return 0;
 }
 
-byte TripleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2, uint32_t onTime3, uint32_t offTime3){
+byte TripleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2, uint32_t offset2, uint32_t onTime3, uint32_t offTime3, uint32_t offset3){
   // Check if 1st interval is valid
   if (IntervalTimer(timerIN, onTime, offTime, offset)){
     // Check if 2nd Interval during OnTime is valid
-    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, 0)){
+    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, offset2)){
       return 1;
     }
   }
   else{
     // Check if 3rd Interval during off-time is active
-    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset) - onTime, onTime3, offTime3, 0)){
+    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset) - onTime, onTime3, offTime3, offset3)){
       return 1;
     }
   }  
   return 0;
+}
+*/
+
+byte CalcIntervalTimer(uint32_t timerIN){
+
+  byte r = 0;
+  // "runningTimers" is already loaded
+
+  // Check if 1st interval is valid
+  if (IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0])){
+    r = 1;
+    // Check if Double or Triple Timer is active
+    if (runningTimer.type.doubleI || runningTimer.type.tripleI){
+      // Check if 2nd Interval during OnTime is valid
+      if (IntervalTimer(CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]), runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
+        // still ON
+      }
+      else{
+        r = 0;
+      }
+    }
+  }
+  else{
+    // Check if Triple Timer is active
+    if (runningTimer.type.tripleI){
+      // Check if 3rd Interval during off-time is active
+      if (IntervalTimer(CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]) - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){
+        r = 1;
+      }
+    }    
+  }  
+  return r;
 }
 
 byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
@@ -656,44 +728,37 @@ byte RunTimers(){
   byte r2 = 0;
 
   for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
-    if (runningTimers[i].type.dayTimer){
+
+    // Load Timer
+    TimerFromRomRam(i, 1);
+    
+    if (runningTimer.type.dayTimer){
       // 24h DayTimer...
-      r = DayTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime);
+      r = DayTimer(myTime, runningTimer.onTime[0], runningTimer.offTime[0]);
     }
-    else if (runningTimers[i].type.interval){
-      // Interval Timers
-      if (runningTimers[i].type.doubleI){
-        // Interrupted version
-        r = DoubleIntervalTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime, runningTimers[i].offset, runningTimers[i].onTime2, runningTimers[i].offTime2);
-      }
-      else if (runningTimers[i].type.tripleI){
-        // Interrupted version
-        r = TripleIntervalTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime, runningTimers[i].offset, runningTimers[i].onTime2, runningTimers[i].offTime2, runningTimers[i].onTime3, runningTimers[i].offTime3);
-      }
-      else{
-        // Regular
-        r = IntervalTimer(myTime, runningTimers[i].onTime, runningTimers[i].offTime, runningTimers[i].offset);
-      }      
+    else if (runningTimer.type.interval){
+      // Interval Timer(s)
+      r = CalcIntervalTimer(myTime);
     }
     // Check on valid weekdays
-    if (!getBit(runningTimers[i].weekDays, GetWeekDay(myTime)) && runningTimers[i].weekDays){
+    if (!getBit(runningTimer.weekDays, GetWeekDay(myTime)) && runningTimer.weekDays){
       // Day is not valid
       r = 0;
     }
     // Check on permanent & temporary state
-    if (runningTimers[i].state.permOff){
+    if (runningTimer.state.permOff){
       r = 0;
     }
-    else if (runningTimers[i].state.permOn){
+    else if (runningTimer.state.permOn){
       r = 1;
     }
-    else if (runningTimers[i].state.tempOff && myTime < runningTimers[i].tempUntil){
+    else if (runningTimer.state.tempOff && myTime < runningTimer.tempUntil){
       r = 0;
     }
-    else if (runningTimers[i].state.tempOn && myTime < runningTimers[i].tempUntil){
+    else if (runningTimer.state.tempOn && myTime < runningTimer.tempUntil){
       r = 1;
     }
-    else if (runningTimers[i].state.automatic){
+    else if (runningTimer.state.automatic){
       // r = r;
     }
     else{
@@ -701,25 +766,27 @@ byte RunTimers(){
       r = 0;
     }
     // Clear Temp-Times and States if possible
-    if (runningTimers[i].tempUntil && (myTime >= runningTimers[i].tempUntil)){
-      runningTimers[i].tempUntil = 0;
-      runningTimers[i].state.tempOn = 0;
-      runningTimers[i].state.tempOff = 0;
+    if (runningTimer.tempUntil && (myTime >= runningTimer.tempUntil)){
+      runningTimer.tempUntil = 0;
+      runningTimer.state.tempOn = 0;
+      runningTimer.state.tempOff = 0;
     }
     // Invert if needed
-    if (runningTimers[i].type.invert){
+    if (runningTimer.type.invert){
       r = !r;
     }
     // Check on change
-    if (r != runningTimers[i].state.lastVal){
+    if (r != runningTimer.state.lastVal){
       // Is changed
-      runningTimers[i].state.lastVal = r;
-      runningTimers[i].state.hasChanged = 1;
+      runningTimer.state.lastVal = r;
+      runningTimer.state.hasChanged = 1;
       r2 = 1;
     }
     else{
-      runningTimers[i].state.hasChanged = 0;
+      runningTimer.state.hasChanged = 0;
     }
+    // Move the temporary stuff to ram
+    TimerToRomRam(i, 0);
   }
   return r2;
 }

@@ -183,6 +183,31 @@ void EscCursorLeft(byte cnt){
     Serial.print(cnt);
     Serial.print(F("D"));
 }
+void EscCursorRight(byte cnt){
+    Serial.print(F("\x1B["));
+    Serial.print(cnt);
+    Serial.print(F("C"));
+}
+void EscCursorUp(byte cnt){
+    Serial.print(F("\x1B["));
+    Serial.print(cnt);
+    Serial.print(F("A"));
+}
+void EscCursorDown(byte cnt){
+    Serial.print(F("\x1B["));
+    Serial.print(cnt);
+    Serial.print(F("B"));
+}
+void EscCursorUp1st(byte cnt){
+    Serial.print(F("\x1B["));
+    Serial.print(cnt);
+    Serial.print(F("F"));
+}
+void EscCursorDown1st(byte cnt){
+    Serial.print(F("\x1B["));
+    Serial.print(cnt);
+    Serial.print(F("E"));
+}
 
 void EscSaveCursor(){
   Serial.print(F("\0337"));
