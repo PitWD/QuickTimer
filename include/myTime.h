@@ -697,6 +697,7 @@ uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint3
 byte CalcIntervalTimer(uint32_t timerIN){
 
   byte r = 0;
+  uint32_t currentPos = CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]);;
   // "runningTimers" is already loaded
 
   // Check if 1st interval is valid
@@ -705,8 +706,8 @@ byte CalcIntervalTimer(uint32_t timerIN){
     // Check if Double or Triple Timer is active
     if (runningTimer.type.doubleI || runningTimer.type.tripleI){
       // Check if 2nd Interval during OnTime is valid
-      if (CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]) >= runningTimer.offset[1]){
-        if (IntervalTimer(CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]), runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
+      if (currentPos >= runningTimer.offset[1]){
+        if (IntervalTimer(currentPos, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
           // still ON
         }
         else{
@@ -722,8 +723,8 @@ byte CalcIntervalTimer(uint32_t timerIN){
     // Check if Triple Timer is active
     if (runningTimer.type.tripleI){
       // Check if 3rd Interval during off-time is active
-      if (CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]) - runningTimer.onTime[0] >= runningTimer.offset[2]){
-        if (IntervalTimer(CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]) - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){
+      if (currentPos - runningTimer.onTime[0] >= runningTimer.offset[2]){
+        if (IntervalTimer(currentPos - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){
           r = 1;
         }
       }      

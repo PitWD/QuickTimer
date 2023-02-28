@@ -1036,31 +1036,18 @@ Start:
     break;
   case 'r':
     // temp off
-    /*
-    runningTimer.state.tempOff = 1;
-    runningTimer.state.tempOn = 0;
-    runningTimer.state.hasChanged = 1;
-    runningTimer.tempUntil = myTime + tempTime;
-    */
-    pos = -1;
     runningState[timer].state.tempOff = 1;
     runningState[timer].state.tempOn = 0;
     runningState[timer].state.hasChanged = 1;
     runningState[timer].tempUntil = myTime + tempTime;
+    pos = -1;
     break;
   case 's':
-    // temp on
-    /*
-    runningTimer.state.tempOn = 1;
-    runningTimer.state.tempOff = 0;
-    runningTimer.state.hasChanged = 1;
-    runningTimer.tempUntil = myTime + tempTime;
-    */
-    pos = -1;
     runningState[timer].state.tempOff = 0;
     runningState[timer].state.tempOn = 1;
     runningState[timer].state.hasChanged = 1;
     runningState[timer].tempUntil = myTime + tempTime;
+    pos = -1;
     break;
   case 't':
     // set temporary time
