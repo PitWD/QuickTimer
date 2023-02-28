@@ -1057,7 +1057,7 @@ Start:
     break;
   }
   if (pos > 0){
-    if (pos != 'r'){
+    if (pos != 't'){
       isChanged = 1;
     }  
     goto Start;

@@ -89,9 +89,14 @@ void TimerToRomRam(byte timer, byte rom){
   runningState[timer].state.lastVal = runningTimer.state.lastVal;
   runningState[timer].state.hasChanged = runningTimer.state.hasChanged;
   runningState[timer].state.automatic = runningTimer.state.automatic;
-  //runningState[timer].tempUntil = runningTimer.tempUntil;
+  runningState[timer].tempUntil = runningTimer.tempUntil;
   if (rom){
-    // Save to eeprom, too...
+    // Save the lasting stuff to eeprom, too...
+    runningTimer.state.tempOff = 0;
+    runningTimer.state.tempOn = 0;
+    runningTimer.state.lastVal = 0;
+    runningTimer.state.hasChanged = 0;
+    runningTimer.tempUntil = 0;
     EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimer);
   }
 }
