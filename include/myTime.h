@@ -72,6 +72,8 @@ void TimerFromRomRam(byte timer, byte ram){
   EEPROM.get(timer * sizeof(TimerSTRUCT), runningTimer);
   if (ram){
     // copy temporay stuff from ram, too
+    //runningTimer.state.permOff = runningState[timer].state.permOff;
+    //runningTimer.state.permOn = runningState[timer].state.permOn;
     runningTimer.state.tempOff = runningState[timer].state.tempOff;
     runningTimer.state.tempOn = runningState[timer].state.tempOn;
     runningTimer.state.lastVal = runningState[timer].state.lastVal;
@@ -79,11 +81,12 @@ void TimerFromRomRam(byte timer, byte ram){
     runningTimer.state.automatic = runningState[timer].state.automatic;
     runningTimer.tempUntil = runningState[timer].tempUntil;
   }
-  
 }
 
 void TimerToRomRam(byte timer, byte rom){
   // Move the temporary stuff to ram
+  runningState[timer].state.permOff = runningTimer.state.permOff;
+  runningState[timer].state.permOn = runningTimer.state.permOn;
   runningState[timer].state.tempOff = runningTimer.state.tempOff;
   runningState[timer].state.tempOn = runningTimer.state.tempOn;
   runningState[timer].state.lastVal = runningTimer.state.lastVal;
