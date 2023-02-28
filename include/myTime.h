@@ -694,36 +694,6 @@ uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint3
 
 }
 
-/*
-byte DoubleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2, uint32_t offset2){
-  // Check if 1st interval is valid
-  if (IntervalTimer(timerIN, onTime, offTime, offset)){
-    // Check if 2nd interval is valid
-    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, offset2)){
-      return 1;
-    }
-  }
-  return 0;
-}
-
-byte TripleIntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t onTime2, uint32_t offTime2, uint32_t offset2, uint32_t onTime3, uint32_t offTime3, uint32_t offset3){
-  // Check if 1st interval is valid
-  if (IntervalTimer(timerIN, onTime, offTime, offset)){
-    // Check if 2nd Interval during OnTime is valid
-    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset), onTime2, offTime2, offset2)){
-      return 1;
-    }
-  }
-  else{
-    // Check if 3rd Interval during off-time is active
-    if (IntervalTimer(CurrentIntervalPos(timerIN, onTime, offTime, offset) - onTime, onTime3, offTime3, offset3)){
-      return 1;
-    }
-  }  
-  return 0;
-}
-*/
-
 byte CalcIntervalTimer(uint32_t timerIN){
 
   byte r = 0;
