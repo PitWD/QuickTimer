@@ -199,7 +199,7 @@ uint32_t SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, b
 
 void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t *yearIN, byte *hourIN, byte *minIN, byte *secIN){
 
-  uint32_t nextSeconds = 31535999UL;
+  uint32_t nextSeconds = 31536000UL;
   *yearIN = 2023;
 
   // Year
@@ -209,7 +209,7 @@ void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t
     *yearIN += 1;
     serializedIN -= nextSeconds;
     
-    nextSeconds = 31535999UL;
+    nextSeconds = 3153600UL;
     if (IsLeapYear(*yearIN)){
       nextSeconds += 86400UL;
     }
@@ -217,12 +217,12 @@ void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t
   }
   
   // Month
-  nextSeconds = 2678399UL;
+  nextSeconds = 2678400UL;
   *monthIN = 1;
   while (serializedIN > nextSeconds){
     *monthIN += 1;
     serializedIN -= nextSeconds;
-    nextSeconds = GetDaysOfMonth(*monthIN, *yearIN) * 86400UL - 1;
+    nextSeconds = GetDaysOfMonth(*monthIN, *yearIN) * 86400UL;
   }
 
   // Day
@@ -497,13 +497,6 @@ void SerialDayTimeToStr(uint32_t timeIN){
   byte minute = 0;
   byte second = 0;
   DeSerializeTime(timeIN, NULL, NULL, NULL, &hour, &minute, &second);
-/*
-  timeIN = timeIN % 86400UL;
-  int hours = timeIN / 3600UL;
-  timeIN = timeIN % 3600UL;
-  byte minutes = timeIN / 60;
-  byte seconds = timeIN % 60;
-*/
   DayTimeToStr(hour, minute, second);
 }
 
@@ -684,7 +677,8 @@ byte DoTimer(){
 
 uint32_t CurrentIntervalPos(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset){
   // Calculate the current position within the interval
-  return (uint32_t)(timerIN - offset) % (uint32_t)(onTime + offTime);
+  //return (uint32_t)(timerIN - offset) % (uint32_t)(onTime + offTime);
+  return (timerIN - offset) % (onTime + offTime);
 }
 #define LastInterval(timerIN, onTime, offTime, offset) CurrentIntervalPos(timerIN, onTime, offTime, offset)
 
@@ -705,7 +699,7 @@ uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint3
 byte CalcIntervalTimer(uint32_t timerIN){
 
   byte r = 0;
-  uint32_t currentPos = CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]);;
+  uint32_t currentPos = CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]);
   // "runningTimers" is already loaded
 
   // Check if 1st interval is valid
