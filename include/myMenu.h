@@ -1070,7 +1070,7 @@ Start:
 void PrintLoopMenu(){
 
   byte r = 1;
-  byte pos = PrintMenuTop((char*)"                                - QuickTimer 1.01 -                             ");
+  byte pos = PrintMenuTop((char*)"                                - QuickTimer 1.02 -                             ");
   EscCursorVisible(0);
   pos += 2;
 
@@ -1113,7 +1113,7 @@ void PrintMainMenu(){
 
 Start:
 
-  char pos = PrintMenuTop((char*)"                         - Main Menu QuickTimer 1.01 -                          ");
+  char pos = PrintMenuTop((char*)"                         - Main Menu QuickTimer 1.02 -                          ");
   
   uint32_t hlpDate = 0;
   uint32_t hlpTime = 0;
