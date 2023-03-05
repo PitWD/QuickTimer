@@ -169,15 +169,20 @@ byte GetUserString(char *strIN){
   
   char c = 0;
   byte timeOut = 60;
-  byte eos = 0;       // Pos of EndOfString
+  byte eos = strlen(strIN);   // Position of EndOfString
+  byte pos = 0;               // Position of cursor
+  
+  byte escCnt = 0;            // hlp to interpret esc-sequences
+  char escErr = 0;            // hlp to interpret esc-sequences
+  byte escCmd = 0;
 
   EscBold(1);
   Serial.print(F(">> "));
   EscBold(0);
   EscColor(fgCyan);
 
-  eos = strlen(strIN);
   if (eos){
+    pos = eos;
     Serial.print(strIN);
     strcpy(strHLP, strIN);
   }
@@ -189,7 +194,7 @@ byte GetUserString(char *strIN){
     if (DoTimer()){
       timeOut--;
       if (!timeOut){
-        strHLP[0] = 0;
+        strcpy(strHLP, strIN);
         EscColor(0);
         return 0;
       }
@@ -200,45 +205,148 @@ byte GetUserString(char *strIN){
       timeOut = 60;
 
       c = Serial.read();
-      if (eos < IIC_HLP_LEN - 1){
-        eos++;
-      }
-      else{
-        EscCursorLeft(1);
-      }
 
       switch (c){
       case 8:
       case 27:
+        // Take all other chars from SerialBuffer and check on cursor movement and unsupported ESC-Sequences
+        // Single ESC is a user-esc
+        escErr = 0;
+        escCnt = 0;
+        escCmd = 0;
+        delay(12);
+        while (Serial.available()){
+          escCnt++;
+          c = Serial.read();
+          delay(12);
+          switch (escCnt){
+          case 1:
+            if (c != 91){
+              // unsupported
+              escErr = 1;
+            }
+            break;
+          case 2:
+            switch (c){
+            case 51:
+              // del
+            case 67:
+              // right
+            case 68:
+              // left
+              escCmd = c;
+              break;
+            default:
+              // unsupported
+              escErr = 1;
+              break;
+            }
+            break;
+          case 3:
+            switch (c){
+            case 126:
+              switch (escCmd){
+              case 51:
+                // del
+                break;
+              default:
+                escErr = 1;
+                break;
+              }
+              break;
+            default:
+              escErr = 1;
+              break;
+            }
+            break;
+          default:
+            // unsupported
+            escErr = 1;
+            break;
+          }
+        }
+        if (!escCnt){
+          // Single User ESC
+          // Restore text and return
+          strcpy(strHLP, strIN);
+          eos = strlen(strHLP);
+          c = 13;
+        }
+        else{
+          if (!escErr){
+            // Known Sequence
+            switch (escCmd){
+            case 67:
+              // right
+              if (pos < eos){
+                pos++;
+                EscCursorRight(1);
+              }
+              break;
+            case 68:
+              // left
+              if (pos){
+                pos--;
+                EscCursorLeft(1);
+              }
+              break;
+            case 51:
+              // del
+              if (pos < eos){
+                memmove(&strHLP[pos], &strHLP[pos + 1], eos - pos);
+                Serial.print(&strHLP[pos]);
+                Serial.print(F(" "));
+                EscCursorLeft(eos - pos);
+                eos--;
+              }
+              break;
+            }
+          }
+        }
+        break;
       case 127:
-        // DEL and Backspace
-        if (eos > 1){
-          // last to 2nd char
-          eos -= 2;
+        // Back
+        if (pos && (pos == eos)){
+          // Cursor is at the end
+          eos--;
+          pos--;
           EscCursorLeft(1);
           Serial.print(F(" "));
           EscCursorLeft(1);
+          strHLP[eos] = 0;
         }
-        else if (eos == 1){
-          // first char
-          strHLP[0] = 0;
-          eos = 0;
-        }
-                
+        else if (pos && (pos < eos)){
+          // Cursor is 'somewhere' - shift chars 1 to left
+          pos--;
+          memmove(&strHLP[pos], &strHLP[pos + 1], eos - pos + 2);
+          EscCursorLeft(1);
+          Serial.print(&strHLP[pos]);
+          Serial.print(F(" "));
+          EscCursorLeft(eos - pos);
+          eos--;
+        }                
         break;
       case 10:
       case 13:
         break;
       default:
         // Print and save char
+        if (pos == IIC_HLP_LEN){
+          // MaxLen reached
+          EscCursorLeft(1);
+          pos--;
+          eos--;
+        }
         Serial.print(c);
-        strHLP[eos - 1] = c;
+        strHLP[pos] = c;
+        pos++;
+        eos++;
         break;
       }
     }
   }
 
-  strHLP[eos - 1] = 0;
+  strHLP[eos] = 0;
   EscColor(0);
   return 1;
 
