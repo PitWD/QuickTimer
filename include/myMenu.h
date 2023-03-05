@@ -213,11 +213,18 @@ byte GetUserString(char *strIN){
       case 127:
         // DEL and Backspace
         if (eos > 1){
+          // last to 2nd char
           eos -= 2;
           EscCursorLeft(1);
           Serial.print(F(" "));
           EscCursorLeft(1);
-        }        
+        }
+        else if (eos == 1){
+          // first char
+          strHLP[0] = 0;
+          eos = 0;
+        }
+                
         break;
       case 10:
       case 13:
