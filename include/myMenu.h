@@ -207,7 +207,6 @@ byte GetUserString(char *strIN){
       c = Serial.read();
 
       switch (c){
-      case 8:
       case 27:
         // Take all other chars from SerialBuffer and check on cursor movement and unsupported ESC-Sequences
         // Single ESC is a user-esc
@@ -304,6 +303,7 @@ byte GetUserString(char *strIN){
           }
         }
         break;
+      case 8:
       case 127:
         // Back
         if (pos && (pos == eos)){
@@ -337,6 +337,17 @@ byte GetUserString(char *strIN){
           pos--;
           eos--;
         }
+        else if (pos < eos){
+          // Cursor is 'somewhere' - shift chars 1 to right
+          memmove(&strHLP[pos + 1], &strHLP[pos], eos - pos + 1);
+          EscCursorRight(1);
+          Serial.print(&strHLP[pos + 1]);
+          EscCursorLeft(eos - pos + 1);
+        }
+        else{
+          // pos & eos at the 1st or last position of string
+          strHLP[pos + 1] = 0;
+        }        
         Serial.print(c);
         strHLP[pos] = c;
         pos++;
