@@ -102,8 +102,9 @@ long StrToInt(char *strIN, byte next){
         if (nextVal == NULL){
             nextVal = strchr(actVal, '\0');
         }
-        // count of missing digits after dot
+        // count of missing (less than 3) digits after dot
         r = 3 - (long)(nextVal - dot);
+        // preload multiplier (10^r)
         r = exp10(r + 1);
         for (nextVal -= 1; nextVal > dot; nextVal--){
             afterDot += r * (nextVal[0] - 48);
@@ -331,27 +332,30 @@ byte GetUserString(char *strIN){
         break;
       default:
         // Print and save char
-        if (pos == IIC_HLP_LEN){
-          // MaxLen reached
-          EscCursorLeft(1);
-          pos--;
-          eos--;
-        }
-        else if (pos < eos){
-          // Cursor is 'somewhere' - shift chars 1 to right
-          memmove(&strHLP[pos + 1], &strHLP[pos], eos - pos + 1);
-          EscCursorRight(1);
-          Serial.print(&strHLP[pos + 1]);
-          EscCursorLeft(eos - pos + 1);
-        }
-        else{
-          // pos & eos at the 1st or last position of string
-          strHLP[pos + 1] = 0;
+        if (c > 31 && c < 255){
+          // Valid char
+          if (pos == IIC_HLP_LEN){
+            // MaxLen reached
+            EscCursorLeft(1);
+            pos--;
+            eos--;
+          }
+          else if (pos < eos){
+            // Cursor is 'somewhere' - shift chars 1 to right
+            memmove(&strHLP[pos + 1], &strHLP[pos], eos - pos + 1);
+            EscCursorRight(1);
+            Serial.print(&strHLP[pos + 1]);
+            EscCursorLeft(eos - pos + 1);
+          }
+          else{
+            // pos & eos at the 1st or last position of string
+            strHLP[pos + 1] = 0;
+          }        
+          Serial.print(c);
+          strHLP[pos] = c;
+          pos++;
+          eos++;
         }        
-        Serial.print(c);
-        strHLP[pos] = c;
-        pos++;
-        eos++;
         break;
       }
     }
