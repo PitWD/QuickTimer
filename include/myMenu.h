@@ -401,15 +401,18 @@ byte GetUserString(char *strIN){
 long GetUserVal(long defVal, byte type){
   // type:  0 = int as it is
   //        1 = float (*1000)
+  
+  // Set strHLP2 to representation of defVal
   if (type){
     // Is scaled float
     IntToStr(defVal, 1, 3, ' ');
     strcpy(strHLP2, strHLP);
   }
   else{
-    /* code */
+    // Integer as it is
     ltoa(defVal, strHLP2, 10);
   }
+
   if (GetUserString(strHLP2)){
     if (type){
       // Is scaled float
@@ -417,7 +420,7 @@ long GetUserVal(long defVal, byte type){
       defVal = StrToInt(strHLP2, 0);
     }
     else{
-      /* code */
+      // Integer as it is
       defVal = atol(strHLP);
     }
   }
@@ -488,11 +491,8 @@ byte PrintLine(byte pos, byte start, byte len){
   }
   return pos;
 }
+#define PrintShortLine(pos, posX) PrintLine(pos, posX, 3)
 
-byte PrintShortLine(byte pos, byte posX){
-  pos = PrintLine(pos, posX, 3);
-  return pos;
-}
 
 byte PrintBoldValue(long val, byte lz, byte dp, char lc){
   EscBold(1);
