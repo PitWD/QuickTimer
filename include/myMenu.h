@@ -70,8 +70,8 @@ long exp10(int e){
 
 long StrToInt(char *strIN, byte next){
 
-    // "1.234" , 1000  ==> 1234
-    // mul == 0 search next
+    // "1.234,4.321" ==> 1234 (1st call with next = 0)
+    // "1.234,4.321" ==> 4321 (next call with next = 1)
 
     long r = 0;
 
@@ -99,6 +99,32 @@ long StrToInt(char *strIN, byte next){
     nextVal = strchr(actVal, ',');
     
     if (dot){
+        // Floating point number
+
+        char afterDotChars[] = "000";
+        char *eofAfterDot = NULL;
+
+        if (nextVal == NULL){
+          // Next val doesn't exist
+          eofAfterDot = strchr(actVal, '\0');
+        }
+        else{
+          eofAfterDot = nextVal;
+          nextVal++;
+        }
+        
+        // count of digits after dot
+        r = (long)(nextVal - dot) - 1;
+
+        if (r > 3){
+          // too much. Max precision is 1/1000
+          r = 3;
+        }
+        memcpy(afterDotChars, dot + 1, r);
+
+        afterDot = atol(afterDotChars);
+
+        /*
         if (nextVal == NULL){
             nextVal = strchr(actVal, '\0');
         }
@@ -110,11 +136,16 @@ long StrToInt(char *strIN, byte next){
             afterDot += r * (nextVal[0] - 48);
             r *= 10;
         }
+        */
     }
-    if (nextVal){
-        nextVal++;
+    else{
+      // Integer number
+      if (nextVal){
+          // Valid next number - pointer on 1st char
+          nextVal++;
+      }
     }
-
+    
     if (preDot >= 0){
         r = preDot + afterDot;
     }
