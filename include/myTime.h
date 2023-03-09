@@ -500,28 +500,18 @@ void SerialDayTimeToStr(uint32_t timeIN){
   DayTimeToStr(hour, minute, second);
 }
 
-void PrintSerTime(uint32_t timeIN, byte d){
-  // if d is set, '000d 00:00:00'
+void PrintSerTime(uint32_t timeIN, byte printDays){
+  // if "printDays" is set, '000d 00:00:00'
   // else         '00:00:00'
-  uint32_t days = 0;
-  if (d){
-    days = timeIN / 86400UL;
-  }
-  /*
-  timeIN = timeIN % 86400UL;
-  int hours = timeIN / 3600UL;
-  timeIN = timeIN % 3600UL;
-  byte minutes = timeIN / 60;
-  byte seconds = timeIN % 60;
-  */
-  if (d){
+
+  if (printDays){
+    uint32_t days = timeIN / 86400UL;
     IntToStr(days * 1000, 3, 0, ' ');
     Serial.print(strHLP);
     Serial.print(F("d "));
   }
   SerialDayTimeToStr(timeIN);
   Serial.print(strHLP2);
-  // PrintHlpTime((byte)hours, minutes, seconds);
 }
 
 void PrintTime(){
@@ -529,11 +519,7 @@ void PrintTime(){
 }
 
 void PrintRunTime(){
-    IntToStr((long)myRunDay * 1000,4,0,' ');
-    Serial.print(strHLP);
-    Serial.print(F("d"));
-    Serial.print(F(" "));
-    PrintHlpTime(myRunHour, myRunMin, myRunSec);
+    PrintSerTime(myRunTime, 1);
 }
 
 void PrintDateTime(){
