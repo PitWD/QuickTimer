@@ -2,6 +2,9 @@
 #include "myIIC.h"
 #include "myTime.h"
 
+#define SMALL_GetUserVal 1
+
+
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
 uint32_t mySpeed = 9600;
 byte mySolarized = 0;
@@ -75,79 +78,82 @@ void PrintCharsCnt(char charToPrint, byte cnt){
 }
 #define PrintSpaces(cnt) PrintCharsCnt(' ', cnt)
 
-long StrToInt(char *strIN, byte next){
+#if SMALL_GetUserVal
+#else
+  long StrToInt(char *strIN, byte next){
 
-    // "1.234,4.321" ==> 1234 (1st call with next = 0)
-    // "1.234,4.321" ==> 4321 (next call with next = 1)
+      // "1.234,4.321" ==> 1234 (1st call with next = 0)
+      // "1.234,4.321" ==> 4321 (next call with next = 1)
 
-    long r = 0;
+      long r = 0;
 
-    static char *nextVal = NULL;
-    static char *actVal = NULL;
+      static char *nextVal = NULL;
+      static char *actVal = NULL;
 
-    long preDot = 0;
-    long afterDot = 0;
-    
-    if (next){
-        // Next Val
-        actVal = nextVal;
-    }
-    else{
-        // New Val
-        actVal = strIN;
-    }
-
-    preDot = atol(actVal) * 1000;
-
-    // decimal dot
-    char *dot = strchr(actVal, '.');
-    
-    // (probably) next number
-    nextVal = strchr(actVal, ',');
-    
-    if (dot){
-        // Floating point number
-
-        char afterDotChars[] = "000";
-        char *eofAfterDot = NULL;
-
-        if (nextVal == NULL){
-          // Next val doesn't exist
-          eofAfterDot = strchr(actVal, '\0');
-        }
-        else{
-          eofAfterDot = nextVal;
-          nextVal++;
-        }
-        
-        // count of digits after dot
-        r = (long)(nextVal - dot) - 1;
-
-        if (r > 3){
-          // too much. Max precision is 1/1000
-          r = 3;
-        }
-        memcpy(afterDotChars, dot + 1, r);
-
-        afterDot = atol(afterDotChars);
-    }
-    else{
-      // Integer number
-      if (nextVal){
-          // Valid next number - pointer on 1st char
-          nextVal++;
+      long preDot = 0;
+      long afterDot = 0;
+      
+      if (next){
+          // Next Val
+          actVal = nextVal;
       }
-    }
-    
-    if (preDot >= 0){
-        r = preDot + afterDot;
-    }
-    else{
-        r = preDot - afterDot;
-    }
+      else{
+          // New Val
+          actVal = strIN;
+      }
 
-    return r;
-}
+      preDot = atol(actVal) * 1000;
+
+      // decimal dot
+      char *dot = strchr(actVal, '.');
+      
+      // (probably) next number
+      nextVal = strchr(actVal, ',');
+      
+      if (dot){
+          // Floating point number
+
+          char afterDotChars[] = "000";
+          char *eofAfterDot = NULL;
+
+          if (nextVal == NULL){
+            // Next val doesn't exist
+            eofAfterDot = strchr(actVal, '\0');
+          }
+          else{
+            eofAfterDot = nextVal;
+            nextVal++;
+          }
+          
+          // count of digits after dot
+          r = (long)(nextVal - dot) - 1;
+
+          if (r > 3){
+            // too much. Max precision is 1/1000
+            r = 3;
+          }
+          memcpy(afterDotChars, dot + 1, r);
+
+          afterDot = atol(afterDotChars);
+      }
+      else{
+        // Integer number
+        if (nextVal){
+            // Valid next number - pointer on 1st char
+            nextVal++;
+        }
+      }
+      
+      if (preDot >= 0){
+          r = preDot + afterDot;
+      }
+      else{
+          r = preDot - afterDot;
+      }
+
+      return r;
+  }
+#endif
 
 void PrintErrorOK(char err, char ezo, char *strIN){
 
@@ -391,32 +397,43 @@ byte GetUserString(char *strIN){
 
 }
 
-long GetUserVal(long defVal, byte type){
+#if SMALL_GetUserVal
+  long GetUserVal(long defVal){
+#else
+  long GetUserVal(long defVal, byte type){
+#endif
   // type:  0 = int as it is
   //        1 = float (*1000)
   
   // Set strHLP2 to representation of defVal
-  if (type){
-    // Is scaled float
-    IntToStr(defVal, 1, 3, ' ');
-    strcpy(strHLP2, strHLP);
-  }
-  else{
-    // Integer as it is
+  #if SMALL_GetUserVal
     ltoa(defVal, strHLP2, 10);
-  }
-
-  if (GetUserString(strHLP2)){
+    if (GetUserString(strHLP2)){
+      defVal = atol(strHLP);
+    }
+  #else
     if (type){
       // Is scaled float
+      IntToStr(defVal, 1, 3, ' ');
       strcpy(strHLP2, strHLP);
-      defVal = StrToInt(strHLP2, 0);
     }
     else{
       // Integer as it is
-      defVal = atol(strHLP);
+      ltoa(defVal, strHLP2, 10);
     }
-  }
+
+    if (GetUserString(strHLP2)){
+      if (type){
+        // Is scaled float
+        strcpy(strHLP2, strHLP);
+        defVal = StrToInt(strHLP2, 0);
+      }
+      else{
+        // Integer as it is
+        defVal = atol(strHLP);
+      }
+    }
+  #endif
   return defVal;  
 }
 
@@ -1353,7 +1370,7 @@ Start:
     break;
   case '4':
     // Set Address
-    myAddress = GetUserVal(myAddress, 0);
+    myAddress = GetUserVal(myAddress);
     if (!myAddress || myAddress > 254){
       // illegal address - reload from eeprom
       myFromRom();
@@ -1365,7 +1382,7 @@ Start:
     break;
   case '5':
     // Set Speed
-    mySpeed = GetUserVal(mySpeed, 0);
+    mySpeed = GetUserVal(mySpeed);
     if (IsSerialSpeedValid(mySpeed)){ 
       // valid - save to eeprom
       myToRom();
