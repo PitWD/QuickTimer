@@ -529,7 +529,16 @@ void PrintSpacer(byte bold){
   }
 }
 
-void PrintMenuKey(char key, char leadChar, char trailChar){
+void PrintMenuKey(char key, byte space, char leadChar, char trailChar, byte colon, byte bold, byte faint){
+  // "space" is a leading space - (as very 1st print)
+  // "key" is all time bold and underlined followed by a ')'
+  // "leadChar" (bold and underlined, too) is an option
+  // "colon" ': ' (not bold, nor underlined) is an option
+  // "bold" sets/keeps bold on exit
+
+  if (space){
+    Serial.print(F(" "));
+  }
   EscBold(1);
   EscUnder(1);
   if (leadChar){
@@ -539,23 +548,25 @@ void PrintMenuKey(char key, char leadChar, char trailChar){
   Serial.print(F(")"));
   EscBold(0);
   EscUnder(0);
-  Serial.print(F(": "));
+  if (colon){
+    Serial.print(F(": "));
+  }
   if (trailChar){
     Serial.print(trailChar);
   }
-}
-
-void PrintMenuNo(byte number, byte bold){
-  EscBold(1);
-  Serial.print(F(" "));
-  EscUnder(1);
-  Serial.print(F("("));
-  Serial.print(number);
-  Serial.print(F(")"));
-  EscUnder(0);
-  if (!bold){
-    EscBold(0);
+  if (bold){
+    EscBold(1);
   }
+  else if (faint){
+    EscFaint(1);
+  }
+  
+}
+void PrintMenuKeyStd(char key){
+  PrintMenuKey(key, 0, 0, 0, 1, 0, 0);
+}
+void PrintMenuNo(char number){
+  PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
 }
 
 void PrintTimerLine1(byte timer, byte posX, byte posY){
@@ -814,19 +825,19 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     Serial.print(F(":"));
     PrintSpacer(0);
     PrintSerTime(runningTimer.onTime[0], 0);
-    PrintMenuNo(1, 0);
+    PrintMenuNo('1');
     PrintSpacer(0);
   }
   if (r > 2){
     // double & triple
     PrintSerTime(runningTimer.onTime[1], 0);
-    PrintMenuNo(4, 0);
+    PrintMenuNo('4');
     PrintSpacer(0);
   }
   if (r > 3){
     // triple
     PrintSerTime(runningTimer.onTime[2], 0);
-    PrintMenuNo(7, 0);
+    PrintMenuNo('7');
     PrintSpacer(0);
   }
   EscRestoreCursor();
@@ -847,19 +858,19 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     Serial.print(F(":"));
     PrintSpacer(0);
     PrintSerTime(runningTimer.offTime[0], 0);
-    PrintMenuNo(2, 0);
+    PrintMenuNo('2');
     PrintSpacer(0);
   }
   if (r > 2){
     // double & triple
     PrintSerTime(runningTimer.offTime[1], 0);
-    PrintMenuNo(5, 0);
+    PrintMenuNo('5');
     PrintSpacer(0);
   }
   if (r > 3){
     // triple
     PrintSerTime(runningTimer.offTime[2], 0);
-    PrintMenuNo(8, 0);
+    PrintMenuNo('8');
     PrintSpacer(0);
   }
   EscRestoreCursor();
@@ -880,20 +891,20 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     Serial.print(F(":"));
     PrintSpacer(0);
     PrintSerTime(runningTimer.offset[0], 0);
-    PrintMenuNo(3, 0);
+    PrintMenuNo('3');
     PrintSpacer(0);
     r2++;
   }
   if (r > 2){
     // double & triple
     PrintSerTime(runningTimer.offset[1], 0);
-    PrintMenuNo(6, 0);
+    PrintMenuNo('6');
     PrintSpacer(0);
   }
   if (r > 3){
     // triple
     PrintSerTime(runningTimer.offset[2], 0);
-    PrintMenuNo(9, 0);
+    PrintMenuNo('9');
     PrintSpacer(0);
   }
   if (r > 1){
@@ -918,127 +929,80 @@ Start:
   pos--;
   PrintLine(pos++, 4, 75);
   EscLocate(4, pos);
-  PrintMenuKey('0', '(', ' ');
+  PrintMenuKey('0', 0, '(', ' ', 0, 0, 0);
   PrintTimerLine1(timer, 10, pos++);
   PrintLine(pos++, 4, 75);
 
   pos = pos + PrintTimerTable(timer, 11, pos);
 
   EscLocate(4, pos++);
-  PrintMenuKey('A', 0, 0);
-  if (runningTimer.type.interval && !runningTimer.type.doubleI && !runningTimer.type.tripleI){
-    EscBold(1);
-  }
+  PrintMenuKey('A', 0, 0, 0, 1, (runningTimer.type.interval && !runningTimer.type.doubleI && !runningTimer.type.tripleI), 0);
   Serial.print(F("Interval Timer     "));
   
-  PrintMenuKey('B', 0, 0);
-  if (runningTimer.type.doubleI){
-    EscBold(1);
-  }  
+  PrintMenuKey('B', 0, 0, 0, 1, (runningTimer.type.doubleI), 0);
   Serial.print(F("DoubleI Timer     "));
 
-  PrintMenuKey('C', 0, 0);
-  if (runningTimer.type.tripleI){
-    EscBold(1);
-  }  
+  PrintMenuKey('C', 0, 0, 0, 1, (runningTimer.type.tripleI), 0);
   Serial.print(F("TripleI Timer"));
   
   EscLocate(4, pos++);
-  PrintMenuKey('D', 0, 0);
-  if (runningTimer.type.dayTimer){
-    EscBold(1);
-  }
+  PrintMenuKey('D', 0, 0, 0, 1, (runningTimer.type.dayTimer), 0);
   Serial.print(F("24h-Day Timer      "));
 
-  PrintMenuKey('E', 0, 0);
-  if (runningTimer.type.invert){
-    EscBold(1);
-  }
+  PrintMenuKey('E', 0, 0, 0, 1, (runningTimer.type.invert), 0);
   Serial.print(F("Inverted Port     "));
 
-  PrintMenuKey('F', 0, 0);
-  if (!runningTimer.type.interval && !runningTimer.type.dayTimer){
-    EscBold(1);
-  }
+  PrintMenuKey('F', 0, 0, 0, 1, (!runningTimer.type.interval && !runningTimer.type.dayTimer), 0);
   Serial.print(F("Disabled"));
   PrintShortLine(pos++, 4);
   
   EscLocate(4, pos++);
-  PrintMenuKey('G',0,0);
-  if (!runningTimer.weekDays){
-    EscBold(1);
-  }
-  else{
-    EscFaint(1);
-  }
+  PrintMenuKey('G', 0, 0, 0, 1, (!runningTimer.weekDays), (runningTimer.weekDays));
   Serial.print(F("ALL  "));
-  PrintMenuKey('H',0,0);
-  if (!bitRead(runningTimer.weekDays, 1)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('H', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 1)));
   Serial.print(F("Sun  "));
-  PrintMenuKey('I',0,0);
-  if (!bitRead(runningTimer.weekDays, 2)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('I', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 2)));
   Serial.print(F("Mon  "));
-  PrintMenuKey('J',0,0);
-  if (!bitRead(runningTimer.weekDays, 3)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('J', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 3)));
   Serial.print(F("TUE  "));
-  PrintMenuKey('K',0,0);
-  if (!bitRead(runningTimer.weekDays, 4)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('K', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 4)));
   Serial.print(F("Wed  "));
-  PrintMenuKey('L',0,0);
-  if (!bitRead(runningTimer.weekDays, 5)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('L', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 5)));
   Serial.print(F("Thu  "));
-  PrintMenuKey('M',0,0);
-  if (!bitRead(runningTimer.weekDays, 6)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('M', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 6)));
   Serial.print(F("Fri  "));
-  PrintMenuKey('N',0,0);
-  if (!bitRead(runningTimer.weekDays, 7)){
-    EscFaint(1);
-  }
+
+  PrintMenuKey('N', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 7)));
   Serial.print(F("Sat  "));  
 
   PrintShortLine(pos++, 4);
+
   EscLocate(4, pos++);
-  PrintMenuKey('O', 0, 0);
-  if (runningTimer.state.automatic){
-    EscBold(1);
-  }
+  PrintMenuKey('O', 0, 0, 0, 1, (runningTimer.state.automatic), 0);
   Serial.print(F("Automatic          "));
-  PrintMenuKey('P', 0, 0);
-  if (runningTimer.state.permOff){
-    EscBold(1);
-  }
+
+  PrintMenuKey('P', 0, 0, 0, 1, (runningTimer.state.permOff), 0);
   Serial.print(F("Permanent OFF      "));
-  PrintMenuKey('Q', 0, 0);
-  if (runningTimer.state.permOn){
-    EscBold(1);
-  }
+
+  PrintMenuKey('Q', 0, 0, 0, 1, (runningTimer.state.permOn), 0);
   Serial.print(F("Permanent ON"));
+
   PrintShortLine(pos++, 4);
+
   EscLocate(4, pos++);
-  PrintMenuKey('R', 0, 0);
-  if (runningTimer.state.tempOff){
-    EscBold(1);
-  }
+  PrintMenuKey('R', 0, 0, 0, 1, (runningTimer.state.tempOff), 0);
   Serial.print(F("Temporary OFF      "));
-  PrintMenuKey('S', 0, 0);
-  if (runningTimer.state.tempOn){
-    EscBold(1);
-  }
+
+  PrintMenuKey('S', 0, 0, 0, 1, (runningTimer.state.tempOn), 0);
   Serial.print(F("Temporary ON       "));
   
-  PrintMenuKey('T', 0, 0);
+  PrintMenuKeyStd('T');
   Serial.print(F("SetTempTime: "));
   EscBold(1);
   PrintSerTime(tempTime, 0);
@@ -1255,7 +1219,7 @@ void PrintLoopMenu(){
     }
     if (r){
       EscLocate(5, pos);
-      PrintMenuKey((char)(65 + i), 0, ' ');
+      PrintMenuKey((char)(65 + i), 0, 0, ' ', 1, 0, 0);
       TimerFromRomRam(i, 1);
       PrintTimerLine1(i, 9, pos++);
     }
@@ -1282,7 +1246,7 @@ Start:
   for (int i = 0; i < RUNNING_TIMERS_CNT; i++){
     pos++;
     EscLocate(5, pos);
-    PrintMenuKey((char)(65 + i), 0, ' ');
+    PrintMenuKey((char)(65 + i), 0, 0, ' ', 1, 0, 0);
     TimerFromRomRam(i, 1);
     PrintTimerLine1(i, 0, 0);
   }
@@ -1290,26 +1254,26 @@ Start:
   pos = PrintShortLine(pos + 1, 8);
 
   EscLocate(5, pos);
-  PrintMenuKey('1', 0, 0);
+  PrintMenuKeyStd('1');
   Serial.print(F("ReBoot"));
   EscLocate(18, pos);
-  PrintMenuKey('2', 0, 0);
+  PrintMenuKeyStd('2');
   Serial.print(F("Date"));
   EscLocate(29, pos);
-  PrintMenuKey('3', 0, 0);
+  PrintMenuKeyStd('3');
   Serial.print(F("Time"));
   EscLocate(40, pos);
-  PrintMenuKey('4', 0, 0);
+  PrintMenuKeyStd('4');
   Serial.print(F("Address = "));
   PrintBoldValue((long)myAddress * 1000, 3, 0, '0');
   EscLocate(60, pos++);
-  PrintMenuKey('5', 0, 0);
+  PrintMenuKeyStd('5');
   Serial.print(F("Speed = "));
   EscBold(1);
   Serial.print(mySpeed);
   
   EscLocate(5, pos);
-  PrintMenuKey('6', 0, 0);
+  PrintMenuKeyStd('6');
   Serial.print(F("Boot4Terminal = "));
   if (myBoot){
     EscFaint(1);
@@ -1321,8 +1285,8 @@ Start:
     Serial.print(F("True"));
     EscLocate(33, pos);
   }
-  EscBold(0);
-  PrintMenuKey('7', 0, 0);
+
+  PrintMenuKeyStd('7');
   Serial.print(F("Boot4Slave = "));
   if (myBoot){
     EscBold(1);
@@ -1334,14 +1298,8 @@ Start:
     Serial.print(F("False"));
     EscLocate(59, pos++);
   }
-  EscBold(0);
-  PrintMenuKey('8', 0, 0);
-  if (mySolarized){
-    EscBold(1);
-  }
-  else{
-    EscFaint(1);
-  }
+
+  PrintMenuKey('8', 0, 0, 0, 1, (mySolarized), (!mySolarized));
   Serial.print(F("Sol.Color"));
   EscBold(0);
 
