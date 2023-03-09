@@ -68,6 +68,13 @@ long exp10(int e){
   return x;
 }
 
+void PrintCharsCnt(char charToPrint, byte cnt){
+  while (cnt--){
+    Serial.print(charToPrint);
+  }
+}
+#define PrintSpaces(cnt) PrintCharsCnt(' ', cnt)
+
 long StrToInt(char *strIN, byte next){
 
     // "1.234,4.321" ==> 1234 (1st call with next = 0)
@@ -123,20 +130,6 @@ long StrToInt(char *strIN, byte next){
         memcpy(afterDotChars, dot + 1, r);
 
         afterDot = atol(afterDotChars);
-
-        /*
-        if (nextVal == NULL){
-            nextVal = strchr(actVal, '\0');
-        }
-        // count of missing (less than 3) digits after dot
-        r = 3 - (long)(nextVal - dot);
-        // preload multiplier (10^r)
-        r = exp10(r + 1);
-        for (nextVal -= 1; nextVal > dot; nextVal--){
-            afterDot += r * (nextVal[0] - 48);
-            r *= 10;
-        }
-        */
     }
     else{
       // Integer number
@@ -486,13 +479,14 @@ byte PrintLine(byte pos, byte start, byte len){
   if (pos && start){
     EscLocate(start, pos++);
   }
-  for (int i = 0; i < len; i++){
-    Serial.print(F("-"));
-  }
+  PrintCharsCnt('-', len);
+  
+  //for (int i = 0; i < len; i++){
+    //Serial.print(F("-"));
+  //}
   return pos;
 }
 #define PrintShortLine(pos, posX) PrintLine(pos, posX, 3)
-
 
 byte PrintBoldValue(long val, byte lz, byte dp, char lc){
   EscBold(1);
@@ -504,12 +498,18 @@ byte PrintBoldValue(long val, byte lz, byte dp, char lc){
 
 byte PrintMenuTop(char *strIN){
 
+  byte spaces = 80 - strlen(strIN);
+  byte frontSpaces = spaces / 2;
+  spaces -= frontSpaces;
+
   EscCls();
   EscCursorVisible(1);
   EscInverse(1);
   EscLocate(1, 1);
   EscBold(1);
-  Serial.print((char*)strIN);
+  PrintSpaces(frontSpaces);
+  Serial.print(strIN);
+  PrintSpaces(spaces);
   EscBold(0);
   EscInverse(0);
   return 2;
@@ -947,8 +947,8 @@ void PrintEditMenu(byte timer){
 
 Start:
 
-  char pos = PrintMenuTop((char*)"                                - Edit-Timer -                                  ") + 1;
-  pos--;
+  char pos = PrintMenuTop((char*)"- Edit-Timer -");
+  
   PrintLine(pos++, 4, 75);
   EscLocate(4, pos);
   PrintMenuKey('0', 0, '(', ' ', 0, 0, 0);
@@ -1217,7 +1217,7 @@ Start:
 void PrintLoopMenu(){
 
   byte r = 1;
-  byte pos = PrintMenuTop((char*)"                                - QuickTimer 1.02 -                             ");
+  byte pos = PrintMenuTop((char*)"- QuickTimer 1.02 -");
   EscCursorVisible(0);
   pos += 2;
 
@@ -1260,7 +1260,7 @@ void PrintMainMenu(){
 
 Start:
 
-  char pos = PrintMenuTop((char*)"                         - Main Menu QuickTimer 1.02 -                          ");
+  char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.02 -");
   
   uint32_t hlpDate = 0;
   uint32_t hlpTime = 0;
