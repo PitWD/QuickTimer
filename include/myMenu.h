@@ -569,39 +569,61 @@ void PrintMenuNo(char number){
   PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
 }
 
-void PrintTimerLine1(byte timer, byte posX, byte posY){
+void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
 
+  // "timer" - the timer-id
+  // "posX & posY" - if set, set cursor position
+  // "name" - if the 'static' name is printed
+  // "type" - 0 = type-area untouched
+  //        - 1 = timer-type
+  //        - 2 = last port-set-time
 
   if (posX && posY){
     EscLocate(posX, posY);
   }
     
   // Name 16 chars
-  EscBold(1);
-  Serial.print(runningTimer.name);
-  EscBold(0);
-  byte len = 16 - strlen(runningTimer.name);
-  while (len--){
-    Serial.print(F(" "));
+  if (name){
+    EscBold(1);
+    Serial.print(runningTimer.name);
+    EscBold(0);
+    byte len = 16 - strlen(runningTimer.name);
+    while (len--){
+      Serial.print(F(" "));
+    }
   }
+  else{
+    EscCursorRight(16);
+  }  
   Serial.print(F("| "));
 
   // Type 11 chars
-  if (runningTimer.type.tripleI == 1){
-    Serial.print(F("InterIII"));
+  if (type == 1){
+    // Print Timer-Type
+    if (runningTimer.type.tripleI == 1){
+      Serial.print(F("InterIII"));
+    }
+    else if (runningTimer.type.doubleI == 1){
+      Serial.print(F("Inter-II"));
+    }
+    else if (runningTimer.type.interval == 1){
+      Serial.print(F("Interval"));
+    }
+    else if (runningTimer.type.dayTimer == 1){
+      Serial.print(F("  24h   "));
+    }
+    else{
+      EscFaint(1);
+      Serial.print(F("Disabled"));
+    }
   }
-  else if (runningTimer.type.doubleI == 1){
-    Serial.print(F("Inter-II"));
-  }
-  else if (runningTimer.type.interval == 1){
-    Serial.print(F("Interval"));
-  }
-  else if (runningTimer.type.dayTimer == 1){
-    Serial.print(F("  24h   "));
+  else if (type == 2){
+    // Print Time
+    PrintSerTime(myTime, 0);
   }
   else{
-    EscFaint(1);
-    Serial.print(F("Disabled"));
+    // Print Nothing
+    EscCursorRight(8);
   }
   EscFaint(0);
   PrintSpacer(0);
@@ -930,7 +952,7 @@ Start:
   PrintLine(pos++, 4, 75);
   EscLocate(4, pos);
   PrintMenuKey('0', 0, '(', ' ', 0, 0, 0);
-  PrintTimerLine1(timer, 10, pos++);
+  PrintTimerLine1(timer, 10, pos++, 1, 1);
   PrintLine(pos++, 4, 75);
 
   pos = pos + PrintTimerTable(timer, 11, pos);
@@ -1221,7 +1243,7 @@ void PrintLoopMenu(){
       EscLocate(5, pos);
       PrintMenuKey((char)(65 + i), 0, 0, ' ', 1, 0, 0);
       TimerFromRomRam(i, 1);
-      PrintTimerLine1(i, 9, pos++);
+      PrintTimerLine1(i, 9, pos++, 1, 2);
     }
     r = 1;
   }
@@ -1248,7 +1270,7 @@ Start:
     EscLocate(5, pos);
     PrintMenuKey((char)(65 + i), 0, 0, ' ', 1, 0, 0);
     TimerFromRomRam(i, 1);
-    PrintTimerLine1(i, 0, 0);
+    PrintTimerLine1(i, 0, 0, 1, 1);
   }
 
   pos = PrintShortLine(pos + 1, 8);

@@ -87,7 +87,7 @@ void loop() {
           if (runningState[i].state.hasChanged){
             // And has changed
             TimerFromRomRam(i, 1);
-            PrintTimerLine1(i, 9, pos);
+            PrintTimerLine1(i, 9, pos, 0, 2);
             digitalWrite(i + 2, runningState[i].state.lastVal);
           }
           pos++; 
