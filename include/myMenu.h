@@ -58,17 +58,7 @@ void myFromRom(){
   else{
     fgFaint = 90;
   }
-  
-  
-  
-}
 
-long exp10(int e){
-  long x = 1;
-  for (int i = 0; i < e; i++) {
-    x = x * 10;
-  }
-  return x;
 }
 
 void PrintCharsCnt(char charToPrint, byte cnt){
@@ -757,6 +747,7 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       onDuration = runningTimer.onTime[0];
       offDuration = runningTimer.offTime[0];
       offset = runningTimer.offset[0];
+
     }
     
     currentPos = CurrentIntervalPos(myTime, onDuration, offDuration, offset);

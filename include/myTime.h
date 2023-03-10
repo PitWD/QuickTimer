@@ -689,7 +689,8 @@ byte CalcIntervalTimer(uint32_t timerIN){
   // "runningTimers" is already loaded
 
   // Check if 1st interval is valid
-  if (IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0])){
+  //if (IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0])){
+  if (currentPos < runningTimer.onTime[0]){
     r = 1;
     // Check if Double or Triple Timer is active
     if (runningTimer.type.doubleI || runningTimer.type.tripleI){
