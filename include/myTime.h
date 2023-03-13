@@ -456,30 +456,11 @@ void DateToStr(byte day, byte month, uint16_t year){
 }
 
 void PrintHlpTime(byte hourIN, byte minIN, byte secIN){
-    /*
-    IntToStr((long)hourIN * 1000,2,0,'0');
-    Serial.print(strHLP);
-    Serial.print(F(":"));
-    IntToStr((long)minIN * 1000,2,0,'0');
-    Serial.print(strHLP);
-    Serial.print(F(":"));
-    IntToStr((long)secIN * 1000,2,0,'0');
-    */
     DayTimeToStr(hourIN, minIN, secIN);
     Serial.print(strHLP2);
 }
 
 void PrintHlpDate(byte dayIN, byte monthIN, uint16_t yearIN){
-    /*
-    IntToStr((long)dayIN * 1000,2,0,'0');
-    Serial.print(strHLP);
-    Serial.print(F("."));
-    IntToStr((long)monthIN * 1000,2,0,'0');
-    Serial.print(strHLP);
-    Serial.print(F("."));
-    IntToStr((long)yearIN * 1000,4,0,'0');
-    Serial.print(strHLP);
-    */
     DateToStr(dayIN, monthIN, yearIN);
     Serial.print(strHLP2);
 }

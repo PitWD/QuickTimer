@@ -715,6 +715,8 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
   uint32_t offset;
   uint32_t currentPos;
   uint32_t interval;
+  uint32_t timeToUse;
+
   if (runningTimer.state.permOn || runningTimer.state.permOff){
     // Permanent On/Off
     EscFaint(1);
@@ -741,16 +743,61 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       }
       offDuration = 86400UL - onDuration;
       offset = runningTimer.onTime[0];
+      timeToUse = myTime;
     }
     else{
       // Interval (all)
       onDuration = runningTimer.onTime[0];
       offDuration = runningTimer.offTime[0];
       offset = runningTimer.offset[0];
+      timeToUse = myTime;
 
+      currentPos = CurrentIntervalPos(myTime, onDuration, offDuration, offset);
+      if (currentPos < onDuration){
+        // 1st Interval is true
+        if (runningTimer.type.doubleI || runningTimer.type.tripleI){
+          timeToUse = currentPos;
+          onDuration = runningTimer.onTime[1];
+          offDuration = runningTimer.offTime[1];
+          offset = runningTimer.offset[1];
+          // Check if 2nd Interval during OnTime is valid
+          if (currentPos >= runningTimer.offset[1]){
+            // Offset reached
+            if (IntervalTimer(currentPos, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
+              // ON
+            }
+            else{
+              // Off
+            }
+          }
+          else{
+            // Offset not reached - OFF
+          }
+          // if OFF - Take care, that next ON isn't outside this 1st level ON
+          // if just 2 level - shift by duration - currentpos + offtime + offset
+          // on 3 level - shift by duration - currentpos + offset3
+        }
+      }
+      else{
+        // 1st Interval is false - Check on Triple Timer
+        if (runningTimer.type.tripleI){
+          timeToUse = currentPos - runningTimer.onTime[0];
+          onDuration = runningTimer.onTime[2];
+          offDuration = runningTimer.offTime[2];
+          offset = runningTimer.offset[2];
+          // Check if 3rd Interval during off-time is active
+          if (currentPos - runningTimer.onTime[0] >= runningTimer.offset[2]){
+            if (IntervalTimer(currentPos - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){
+              // ON
+            }
+          }      
+        }    
+      }
+      
+      
     }
     
-    currentPos = CurrentIntervalPos(myTime, onDuration, offDuration, offset);
+    currentPos = CurrentIntervalPos(timeToUse, onDuration, offDuration, offset);
     interval = onDuration + offDuration;
     if (currentPos < onDuration){
       // On since -> until
@@ -768,7 +815,12 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       EscColor(39);
       Serial.print(F(" - "));
       EscColor(fgGreen);
-      PrintSerTime((myTime - currentPos) + interval, 0);
+      timeToUse = (myTime - currentPos) + interval + offset;
+      if (runningTimer.type.tripleI && timeToUse > (myTime - currentPos)){
+        // Next ON will be while ON - Interval
+      }
+      
+      PrintSerTime(timeToUse, 0);
     }
     EscColor(39);
     PrintSpacer(0);
