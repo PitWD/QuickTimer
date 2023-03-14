@@ -802,8 +802,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
           }      
         }    
       }
-      
-      
     }
     
     currentPos = CurrentIntervalPos(timeToUse, onDuration, offDuration, offset);

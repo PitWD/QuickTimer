@@ -673,27 +673,35 @@ byte CalcIntervalTimer(uint32_t timerIN){
   //if (IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0])){
   if (currentPos < runningTimer.onTime[0]){
     r = 1;
-    // Check if Double or Triple Timer is active
-    if (runningTimer.type.whileON || runningTimer.type.whileOFF){
-      // Check if 2nd Interval during OnTime is valid
+    // Check if whileON Timer is active
+    if (runningTimer.type.whileON){
+      // Check if offset is expired
       if (currentPos >= runningTimer.offset[1]){
+        // check if OnTime is active
         if (IntervalTimer(currentPos, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
           // still ON
         }
         else{
+          // OffTime active
           r = 0;
         }
       }
       else{
+        // offset not expired
         r = 0;
       }
     }
+    else if (runningTimer.type.whileOFF){
+      // Never ON
+      r = 0;
+    }
   }
   else{
-    // Check if Triple Timer is active
+    // Check if WhileOff Timer is active
     if (runningTimer.type.whileOFF){
-      // Check if 3rd Interval during off-time is active
+      // Check if offset is expired
       if (currentPos - runningTimer.onTime[0] >= runningTimer.offset[2]){
+        // check if OnTime is active
         if (IntervalTimer(currentPos - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){
           r = 1;
         }
