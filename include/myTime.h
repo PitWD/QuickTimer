@@ -790,17 +790,11 @@ byte RunTimers(){
       // Totally disabled
       r = 0;
     }
-    // Clear Temp-Times and States if possible
-    if (runningTimer.tempUntil && (myTime >= runningTimer.tempUntil)){
-      runningTimer.tempUntil = 0;
-      runningTimer.state.tempOn = 0;
-      runningTimer.state.tempOff = 0;
-    }
     // Invert if needed
     if (runningTimer.type.invert){
       r = !r;
     }
-    // Check on change
+    // Check on 'regular' change
     if (r != runningTimer.state.lastVal){
       // Is changed
       runningTimer.state.lastVal = r;
@@ -809,6 +803,14 @@ byte RunTimers(){
     }
     else{
       runningTimer.state.hasChanged = 0;
+    }
+    // Clear Temp-Times and States if possible
+    if (runningTimer.tempUntil && (myTime >= runningTimer.tempUntil)){
+      runningTimer.tempUntil = 0;
+      runningTimer.state.tempOn = 0;
+      runningTimer.state.tempOff = 0;
+      runningTimer.state.hasChanged = 1;
+      r2 = 1;
     }
     // Move the temporary stuff to ram
     TimerToRomRam(i, 0);
