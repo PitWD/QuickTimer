@@ -9,8 +9,8 @@ struct TimerSTRUCT{
   uint32_t offset[3];
   struct typeUNION{
     byte interval     :1;
-    byte doubleI      :1;
-    byte tripleI      :1;
+    byte whileON      :1;
+    byte whileOFF     :1;
     byte dayTimer     :1;
     byte invert       :1;
   }type;
@@ -674,7 +674,7 @@ byte CalcIntervalTimer(uint32_t timerIN){
   if (currentPos < runningTimer.onTime[0]){
     r = 1;
     // Check if Double or Triple Timer is active
-    if (runningTimer.type.doubleI || runningTimer.type.tripleI){
+    if (runningTimer.type.whileON || runningTimer.type.whileOFF){
       // Check if 2nd Interval during OnTime is valid
       if (currentPos >= runningTimer.offset[1]){
         if (IntervalTimer(currentPos, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
@@ -691,7 +691,7 @@ byte CalcIntervalTimer(uint32_t timerIN){
   }
   else{
     // Check if Triple Timer is active
-    if (runningTimer.type.tripleI){
+    if (runningTimer.type.whileOFF){
       // Check if 3rd Interval during off-time is active
       if (currentPos - runningTimer.onTime[0] >= runningTimer.offset[2]){
         if (IntervalTimer(currentPos - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){

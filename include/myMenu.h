@@ -607,10 +607,10 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
   // Type 11 chars
   if (type == 1){
     // Print Timer-Type
-    if (runningTimer.type.tripleI == 1){
+    if (runningTimer.type.whileOFF == 1){
       Serial.print(F("InterIII"));
     }
-    else if (runningTimer.type.doubleI == 1){
+    else if (runningTimer.type.whileON == 1){
       Serial.print(F("Inter-II"));
     }
     else if (runningTimer.type.interval == 1){
@@ -755,7 +755,7 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       currentPos = CurrentIntervalPos(myTime, onDuration, offDuration, offset);
       if (currentPos < onDuration){
         // 1st Interval is true
-        if (runningTimer.type.doubleI || runningTimer.type.tripleI){
+        if (runningTimer.type.whileON || runningTimer.type.whileOFF){
           timeToUse = currentPos;
           onDuration = runningTimer.onTime[1];
           offDuration = runningTimer.offTime[1];
@@ -780,7 +780,7 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       }
       else{
         // 1st Interval is false - Check on Triple Timer
-        if (runningTimer.type.tripleI){
+        if (runningTimer.type.whileOFF){
           timeToUse = currentPos - runningTimer.onTime[0];
           onDuration = runningTimer.onTime[2];
           offDuration = runningTimer.offTime[2];
@@ -816,7 +816,7 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       Serial.print(F(" - "));
       EscColor(fgGreen);
       timeToUse = (myTime - currentPos) + interval + offset;
-      if (runningTimer.type.tripleI && timeToUse > (myTime - currentPos)){
+      if (runningTimer.type.whileOFF && timeToUse > (myTime - currentPos)){
         // Next ON will be while ON - Interval
       }
       
@@ -857,10 +857,10 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
   else if (runningTimer.type.interval){
     // Interval
     r = 2;
-    if (runningTimer.type.doubleI || runningTimer.type.tripleI){
+    if (runningTimer.type.whileON || runningTimer.type.whileOFF){
       // Double
       r++;
-      if (runningTimer.type.tripleI){
+      if (runningTimer.type.whileOFF){
         // Triple
         r++;
       }
@@ -1018,14 +1018,14 @@ Start:
   pos = pos + PrintTimerTable(timer, 11, pos);
 
   EscLocate(4, pos++);
-  PrintMenuKey('A', 0, 0, 0, 1, (runningTimer.type.interval && !runningTimer.type.doubleI && !runningTimer.type.tripleI), 0);
+  PrintMenuKey('A', 0, 0, 0, 1, (runningTimer.type.interval && !runningTimer.type.whileON && !runningTimer.type.whileOFF), 0);
   Serial.print(F("Interval Timer     "));
   
-  PrintMenuKey('B', 0, 0, 0, 1, (runningTimer.type.doubleI), 0);
-  Serial.print(F("DoubleI Timer     "));
+  PrintMenuKey('B', 0, 0, 0, 1, (runningTimer.type.whileON), 0);
+  Serial.print(F("whileON Timer     "));
 
-  PrintMenuKey('C', 0, 0, 0, 1, (runningTimer.type.tripleI), 0);
-  Serial.print(F("TripleI Timer"));
+  PrintMenuKey('C', 0, 0, 0, 1, (runningTimer.type.whileOFF), 0);
+  Serial.print(F("whileOFF Timer"));
   
   EscLocate(4, pos++);
   PrintMenuKey('D', 0, 0, 0, 1, (runningTimer.type.dayTimer), 0);
@@ -1146,29 +1146,29 @@ Start:
   case 'a':
     // IntervalTimer
     runningTimer.type.interval = 1;
-    runningTimer.type.doubleI = 0;
-    runningTimer.type.tripleI = 0;
+    runningTimer.type.whileON = 0;
+    runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 0;
     break;
   case 'b':
     // Double IntervalTimer
     runningTimer.type.interval = 1;
-    runningTimer.type.doubleI = 1;
-    runningTimer.type.tripleI = 0;
+    runningTimer.type.whileON = 1;
+    runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 0;
     break;
   case 'c':
     // Triple IntervalTimer
     runningTimer.type.interval = 1;
-    runningTimer.type.doubleI = 0;
-    runningTimer.type.tripleI = 1;
+    runningTimer.type.whileON = 0;
+    runningTimer.type.whileOFF = 1;
     runningTimer.type.dayTimer = 0;
     break;
   case 'd':
     // 24h Timer
     runningTimer.type.interval = 0;
-    runningTimer.type.doubleI = 0;
-    runningTimer.type.tripleI = 0;
+    runningTimer.type.whileON = 0;
+    runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 1;
     break;
   case 'e':
@@ -1177,8 +1177,8 @@ Start:
   case 'f':
     // Disabled
     runningTimer.type.interval = 0;
-    runningTimer.type.doubleI = 0;
-    runningTimer.type.tripleI = 0;
+    runningTimer.type.whileON = 0;
+    runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 0;
     runningTimer.state.automatic = 0;
     break;
