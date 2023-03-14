@@ -881,23 +881,23 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     Serial.print(F("    Main    "));
     PrintSpacer(1);
     r2 = 6;
+    if (runningTimer.type.whileON){
+      // whileON
+      Serial.print(F("  while ON  "));
+      PrintSpacer(1);
+    }
+    else if(runningTimer.type.whileOFF){
+      // whileOFF exist...
+      Serial.print(F("    N/A     "));
+      PrintSpacer(1);
+    }
+    if (runningTimer.type.whileOFF){
+      // whileOFF
+      Serial.print(F(" while OFF  "));
+      PrintSpacer(1);
+    }
+    PrintTimerUnderLine(1);
   }
-  if (runningTimer.type.whileON){
-    // whileON
-    Serial.print(F("  while ON  "));
-    PrintSpacer(1);
-  }
-  else if(runningTimer.type.whileOFF){
-    // whileOFF exist...
-    Serial.print(F("    N/A     "));
-    PrintSpacer(1);
-  }
-  if (runningTimer.type.whileOFF){
-    // whileOFF
-    Serial.print(F(" while OFF  "));
-    PrintSpacer(1);
-  }
-  PrintTimerUnderLine(1);
 
   // OnTime-Line
   if (runningTimer.type.dayTimer || runningTimer.type.interval){
@@ -909,25 +909,25 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     PrintSerTime(runningTimer.onTime[0], 0);
     PrintMenuNo('1');
     PrintSpacer(0);
+    if (runningTimer.type.whileON){
+      // whileON
+      PrintSerTime(runningTimer.onTime[1], 0);
+      PrintMenuNo('4');
+      PrintSpacer(0);
+    }
+    else if (runningTimer.type.whileOFF){
+      // whileOFF exist
+      Serial.print(F("   NA    ( )"));
+      PrintSpacer(0);
+    }  
+    if (runningTimer.type.whileOFF){
+      // whileOFF
+      PrintSerTime(runningTimer.onTime[2], 0);
+      PrintMenuNo('7');
+      PrintSpacer(0);
+    }
+    PrintTimerUnderLine(0);
   }
-  if (runningTimer.type.whileON){
-    // whileON
-    PrintSerTime(runningTimer.onTime[1], 0);
-    PrintMenuNo('4');
-    PrintSpacer(0);
-  }
-  else if (runningTimer.type.whileOFF){
-    // whileOFF exist
-    Serial.print(F("   NA    ( )"));
-    PrintSpacer(0);
-  }  
-  if (runningTimer.type.whileOFF){
-    // whileOFF
-    PrintSerTime(runningTimer.onTime[2], 0);
-    PrintMenuNo('7');
-    PrintSpacer(0);
-  }
-  PrintTimerUnderLine(0);
 
   // OffTime-Line
   if (runningTimer.type.dayTimer || runningTimer.type.interval){
@@ -939,29 +939,29 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     PrintSerTime(runningTimer.offTime[0], 0);
     PrintMenuNo('2');
     PrintSpacer(0);
+    if (runningTimer.type.whileON){
+      // whileON
+      PrintSerTime(runningTimer.offTime[1], 0);
+      PrintMenuNo('5');
+      PrintSpacer(0);
+    }
+    else if (runningTimer.type.whileOFF){
+      // whileOFF exist
+      Serial.print(F("   NA    ( )"));
+      PrintSpacer(0);
+    }  
+    if (runningTimer.type.whileOFF){
+      // triple
+      PrintSerTime(runningTimer.offTime[2], 0);
+      PrintMenuNo('8');
+      PrintSpacer(0);
+    }
   }
-  if (runningTimer.type.whileON){
-    // whileON
-    PrintSerTime(runningTimer.offTime[1], 0);
-    PrintMenuNo('5');
-    PrintSpacer(0);
-  }
-  else if (runningTimer.type.whileOFF){
-    // whileOFF exist
-    Serial.print(F("   NA    ( )"));
-    PrintSpacer(0);
-  }  
-  if (runningTimer.type.whileOFF){
-    // triple
-    PrintSerTime(runningTimer.offTime[2], 0);
-    PrintMenuNo('8');
-    PrintSpacer(0);
-  }
-  PrintTimerUnderLine(0);
 
   // Offset-Line
   if (runningTimer.type.interval){
     // Interval
+    PrintTimerUnderLine(0);
     Serial.print(F("  OffSet"));
     EscBold(0);
     Serial.print(F(":"));
@@ -969,24 +969,24 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     PrintSerTime(runningTimer.offset[0], 0);
     PrintMenuNo('3');
     PrintSpacer(0);
-    r2++;
-  }
-  if (runningTimer.type.whileON){
-    // whileON
-    PrintSerTime(runningTimer.offset[1], 0);
-    PrintMenuNo('6');
-    PrintSpacer(0);
-  }
-  else if (runningTimer.type.whileOFF){
-    // whileOFF exist
-    Serial.print(F("   NA    ( )"));
-    PrintSpacer(0);
-  }  
-  if (runningTimer.type.whileOFF){
-    // whileOFF
-    PrintSerTime(runningTimer.offset[2], 0);
-    PrintMenuNo('9');
-    PrintSpacer(0);
+    r2++; // += 2;
+    if (runningTimer.type.whileON){
+      // whileON
+      PrintSerTime(runningTimer.offset[1], 0);
+      PrintMenuNo('6');
+      PrintSpacer(0);
+    }
+    else if (runningTimer.type.whileOFF){
+      // whileOFF exist
+      Serial.print(F("   NA    ( )"));
+      PrintSpacer(0);
+    }  
+    if (runningTimer.type.whileOFF){
+      // whileOFF
+      PrintSerTime(runningTimer.offset[2], 0);
+      PrintMenuNo('9');
+      PrintSpacer(0);
+    }
   }
   if (runningTimer.type.dayTimer || runningTimer.type.interval){
     // something was valid
