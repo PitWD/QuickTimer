@@ -1018,7 +1018,7 @@ Start:
   pos = pos + PrintTimerTable(timer, 11, pos);
 
   EscLocate(4, pos++);
-  PrintMenuKey('A', 0, 0, 0, 1, (runningTimer.type.interval && !runningTimer.type.whileON && !runningTimer.type.whileOFF), 0);
+  PrintMenuKey('A', 0, 0, 0, 1, (runningTimer.type.interval), 0); // && !runningTimer.type.whileON && !runningTimer.type.whileOFF), 0);
   Serial.print(F("Interval Timer     "));
   
   PrintMenuKey('B', 0, 0, 0, 1, (runningTimer.type.whileON), 0);
@@ -1146,22 +1146,26 @@ Start:
   case 'a':
     // IntervalTimer
     runningTimer.type.interval = 1;
-    runningTimer.type.whileON = 0;
-    runningTimer.type.whileOFF = 0;
+    //runningTimer.type.whileON = 0;
+    //runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 0;
     break;
   case 'b':
     // Double IntervalTimer
-    runningTimer.type.interval = 1;
-    runningTimer.type.whileON = 1;
-    runningTimer.type.whileOFF = 0;
+    runningTimer.type.whileON = !runningTimer.type.whileON;
+    if (runningTimer.type.whileON || runningTimer.type.whileOFF){
+      runningTimer.type.interval = 1;
+    }  
+    // runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 0;
     break;
   case 'c':
     // Triple IntervalTimer
-    runningTimer.type.interval = 1;
-    runningTimer.type.whileON = 0;
-    runningTimer.type.whileOFF = 1;
+    runningTimer.type.whileOFF = !runningTimer.type.whileOFF;
+    if (runningTimer.type.whileOFF || runningTimer.type.whileON){
+      runningTimer.type.interval = 1;
+    }  
+    // runningTimer.type.whileON = 0;
     runningTimer.type.dayTimer = 0;
     break;
   case 'd':
