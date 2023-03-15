@@ -725,7 +725,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
   uint32_t currentPos;
   uint32_t interval;
   uint32_t timeToUse;
-  uint32_t endOfInterval;
 
   if (runningTimer.state.permOn || runningTimer.state.permOff){
     // Permanent On/Off
@@ -766,7 +765,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
 
       if (currentPos < onDuration){
         // 1st Interval is ON
-        endOfInterval = myTime - currentPos + onDuration;
         if (runningTimer.type.whileON){
           timeToUse = currentPos;
           onDuration = runningTimer.onTime[1];
@@ -776,7 +774,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       }
       else{
       // 1st Interval is OFF
-      endOfInterval = myTime - currentPos + onDuration + offDuration;
       if (runningTimer.type.whileOFF){
           timeToUse = currentPos - runningTimer.onTime[0];
           onDuration = runningTimer.onTime[2];
@@ -796,9 +793,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       Serial.print(F(" - "));
       EscColor(fgRed);
       timeToUse = (myTime - currentPos) + onDuration;
-      if (timeToUse > endOfInterval){
-        timeToUse = 0;
-      }      
     }
     else{
       // Off since -> until
@@ -808,9 +802,6 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
       Serial.print(F(" - "));
       EscColor(fgGreen);
       timeToUse = (myTime - currentPos) + interval + offset;
-      if (timeToUse > endOfInterval){
-        timeToUse = 0;
-      }
     }
     PrintSerTime(timeToUse, 0);
     EscColor(39);
