@@ -647,7 +647,6 @@ uint32_t CurrentIntervalPos(uint32_t timerIN, uint32_t onTime, uint32_t offTime,
   //return (uint32_t)(timerIN - offset) % (uint32_t)(onTime + offTime);
   return (timerIN - offset) % (onTime + offTime);
 }
-#define LastInterval(timerIN, onTime, offTime, offset) CurrentIntervalPos(timerIN, onTime, offTime, offset)
 
 byte IntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset) {
     // Check if the current position is within the "on" interval
@@ -655,12 +654,6 @@ byte IntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t
         return 1; // "on" interval
     }
     return 0;     // "off" interval
-}
-
-uint32_t NextInterval(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset){
-
-  return (onTime + offTime) - CurrentIntervalPos(timerIN, onTime, offTime, offset);
-
 }
 
 byte CalcIntervalTimer(uint32_t timerIN){
