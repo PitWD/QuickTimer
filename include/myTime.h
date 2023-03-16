@@ -43,6 +43,8 @@ struct TimerStateSTRUCT{
     byte hasChanged   :1;
   }state;
   uint32_t tempUntil;
+  uint32_t lastAction;
+  uint32_t nextAction;
 }runningState[RUNNING_TIMERS_CNT];
 
 // global RunTime Timing
@@ -656,41 +658,135 @@ byte IntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t
     return 0;     // "off" interval
 }
 
-byte CalcIntervalTimer(uint32_t timerIN){
+byte CalcIntervalTimer(uint32_t timerIN, byte timerID){
 
   byte r = 0;
   uint32_t currentPos = CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]);
   // "runningTimers" is already loaded
 
+  uint32_t currentPosWhileOn;
+  uint32_t endOfOnOff;
+
   // Check if 1st interval is valid
   //if (IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0])){
   if (currentPos < runningTimer.onTime[0]){
     r = 1;
+    
+    // **********************************************************************
+    // On 1st Level - Very Easy Going to get previous and next switching points...
+    runningState[timerID].lastAction = timerIN - currentPos;
+    runningState[timerID].nextAction = runningState[timerID].lastAction + runningTimer.onTime[0];
+    // **********************************************************************
+
     // Check if whileON Timer is active
     if (runningTimer.type.whileON){
       // Check if offset is expired
       if (currentPos >= runningTimer.offset[1]){
         // check if OnTime is active
+
+        // **********************************************************************
+        // We need 'currentPos' from whileON to get Last- and NextAction right (!! don't forget to optimize following 'if' later !!)
+        currentPosWhileOn = CurrentIntervalPos(currentPos, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1]);
+        // we need 'endOfOnOff' to verify, that 'runningState[timerID].nextAction' is valid
+        endOfOnOff = timerIN - currentPos + runningTimer.onTime[0];
+        // **********************************************************************
+
         if (IntervalTimer(currentPos, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1])){
           // still ON
+
+          // **********************************************************************
+          runningState[timerID].lastAction = timerIN - currentPosWhileOn;
+          runningState[timerID].nextAction = runningState[timerID].lastAction + runningTimer.onTime[1];
+          if (runningState[timerID].nextAction > endOfOnOff){
+            // next Action outside scope of whileON time ('messy', !but totally valid!, onTime/offTime setting)
+            runningState[timerID].nextAction = endOfOnOff;
+            if (runningTimer.type.whileOFF){
+              // whileOFF exist
+              if (!runningTimer.offset[2]){
+                // without offset, we stay ON until onTime is over
+                runningState[timerID].nextAction += runningTimer.onTime[2];
+              }              
+            }
+            else{
+              // No whileOFF...
+              if (!runningTimer.offset[1]){
+                // without offset we stay ON until onTime is over
+                runningState[timerID].nextAction += runningTimer.onTime[1];
+              }
+            }
+          }
+          // **********************************************************************
+
         }
         else{
           // OffTime active
           r = 0;
+
+          // **********************************************************************
+          runningState[timerID].lastAction = timerIN - currentPosWhileOn + runningTimer.onTime[1];
+          runningState[timerID].nextAction = runningState[timerID].lastAction + runningTimer.offTime[1];
+          if (runningState[timerID].nextAction > endOfOnOff){
+            // next Action outside scope of whileON time ('messy', !but totally valid!, onTime/offTime setting)
+            runningState[timerID].nextAction = endOfOnOff;
+            if (runningTimer.type.whileOFF){
+              // whileOFF exist
+              if (runningTimer.offset[2]){
+                // with offset, we stay OFF until offset is over
+                runningState[timerID].nextAction += runningTimer.offset[2];
+              }              
+            }
+            else{
+              // No whileOFF...
+              if (runningTimer.offset[1]){
+                // with offset we stay OFF until offset is over
+                runningState[timerID].nextAction += runningTimer.offset[1];
+              }
+            }
+          }
+          // **********************************************************************
+
         }
       }
       else{
         // offset not expired
         r = 0;
+
+        // **********************************************************************
+        // Next Action easy
+        runningState[timerID].nextAction = timerIN - currentPos + runningTimer.offset[1];
+        // Previous Action...
+        if (runningTimer.type.whileOFF){
+          // whileOFF exist
+          runningState[timerID].lastAction = timerIN - currentPos - runningTimer.offTime[2];
+        }
+        else{
+          // whileOFF doesn't exist
+          runningState[timerID].lastAction = timerIN - currentPos - runningTimer.offTime[0] - runningTimer.offTime[1];
+        }
+        // **********************************************************************
+              
       }
     }
     else if (runningTimer.type.whileOFF){
-      // Never ON
+      // Never ON whileON - if just whileOFF exist
       r = 0;
+
+      // **********************************************************************
+      runningState[timerID].lastAction -= runningTimer.offTime[2];
+      runningState[timerID].nextAction += runningTimer.offset[2];
+      // **********************************************************************
+
     }
   }
   else{
     // Check if WhileOff Timer is active
+
+    // **********************************************************************
+    // On 1st Level - Very Easy Going to get previous and next switching points...
+    runningState[timerID].lastAction = timerIN - currentPos + runningTimer.onTime[0];
+    runningState[timerID].nextAction = runningState[timerID].lastAction + runningTimer.offTime[0];
+    // **********************************************************************
+
     if (runningTimer.type.whileOFF){
       // Check if offset is expired
       if (currentPos - runningTimer.onTime[0] >= runningTimer.offset[2]){
@@ -756,7 +852,7 @@ byte RunTimers(){
     }
     else if (runningTimer.type.interval){
       // Interval Timer(s)
-      r = CalcIntervalTimer(myTime);
+      r = CalcIntervalTimer(myTime, i);
     }
     // Check on valid weekdays
     if (!getBit(runningTimer.weekDays, GetWeekDay(myTime)) && runningTimer.weekDays){
