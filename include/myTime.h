@@ -644,21 +644,294 @@ byte DoTimer(){
 
 // TIMER
 
+/*
 uint32_t CurrentIntervalPos(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset){
   // Calculate the current position within the interval
-  //return (uint32_t)(timerIN - offset) % (uint32_t)(onTime + offTime);
-  return (timerIN - offset) % (onTime + offTime);
+  // calling functions have to take care that timerIN >= offset
+  uint32_t interval = (onTime + offTime);
+  if (!interval){
+    // Div by 0
+    return 0;
+  }
+  return (timerIN - offset) % interval;
+}
+*/
+
+byte IntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset, uint32_t *start, uint32_t *stop, uint32_t *last, uint32_t *next) {
+    // Check if the current timerIN-position is within the "on" or off interval
+    // calling functions have to take care that timerIN >= offset
+    // Start/Stop/Next/Last are absolute
+
+    // |              a TimerIN (whileON)                                           a timerIN (whileOFF)
+    // |                     |                                                             |
+    // |-Offset-|-----onTime-----|-offTime-|-----onTime-----|-offTime-|-----onTime-----|-offTime-|-----onTime-----|-offTime-|-~
+    //          |---------interval---------|---------interval---------|---------interval---------|---------interval---------|                          
+    //          |            |             |                          |                    |     |
+    //        start          |           stop                       start                  |   stop
+    //                  currentPos(ON)                                                currentPos(OFF)
+    //          |                |                                                     |         |
+    //        last             next                                                  last      next
+
+    uint32_t interval = (onTime + offTime);
+    uint32_t currentPos = 0;
+    if (interval){
+      // Div by 0 protection...
+      currentPos = (timerIN - offset) % interval;
+    }
+    
+    // parts of common Start/Stop/Next/Last calculations
+    timerIN -= currentPos;
+    offTime = timerIN + onTime;
+    *start = timerIN;
+    *stop = *start + interval;
+
+    if (currentPos < onTime){
+        // ON
+        *next = offTime;
+        *last = *start;
+        return 1;
+    }
+    // OFF
+    *next = *stop;
+    *last = offTime;
+    return 0;
 }
 
-byte IntervalTimer(uint32_t timerIN, uint32_t onTime, uint32_t offTime, uint32_t offset) {
-    // Check if the current position is within the "on" interval
-    if (CurrentIntervalPos(timerIN, onTime, offTime, offset) < onTime){
-        return 1; // "on" interval
+byte CheckWhileTimer (byte whileO){
+  // Check/Correct while-Timer Settings on validity
+  // whileO ! 2 = whileOn
+  // whileO = 2 = whileOff
+
+  uint32_t onOff = runningTimer.onTime[0];
+
+  if (whileO == 2){
+    onOff = runningTimer.offTime[0];
+  }
+  else{
+    whileO = 1;
+  }
+  
+  if (runningTimer.offset[whileO] + runningTimer.onTime[whileO] + runningTimer.offTime[whileO] <= onOff){
+    // All OK - regular case
+    return 1;
+  }
+  else if (runningTimer.onTime[whileO] >= onOff){
+    // onTime too long
+    runningTimer.onTime[whileO] = onOff;
+    runningTimer.offset[whileO] = 0;
+    runningTimer.offTime[whileO] = 0;
+  }
+  else{
+    if (runningTimer.onTime[whileO] + runningTimer.offset[whileO] >= onOff){
+      // Offset too long
+      runningTimer.offset[whileO] = onOff - runningTimer.onTime[whileO];
+      runningTimer.offTime[whileO] = 0;
     }
-    return 0;     // "off" interval
+    if (runningTimer.onTime[whileO] + runningTimer.offset[whileO] + runningTimer.offTime[whileO] >= onOff){
+      // OffTime too long
+      runningTimer.offTime[whileO] = onOff - runningTimer.offset[whileO] - runningTimer.onTime[whileO];
+    }    
+  }
+  // Something has changed
+  return 0;
 }
 
 byte CalcIntervalTimer(uint32_t timerIN, byte timerID){
+
+  byte r = 0;
+  
+  // 1st Level OnOff
+  byte r1 = 0;
+  uint32_t start1 = 0;
+  uint32_t stop1 = 0;
+  uint32_t last1 = 0;
+  uint32_t next1 = 0;
+  // 2nd Level OnOff
+  byte r2 = 0;
+  uint32_t start2 = 0;
+  uint32_t stop2 = 0;
+  uint32_t last2 = 0;
+  uint32_t next2 = 0;
+
+  r1 = IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0], &start1, &stop1, &last1, &next1);
+  // 1st level 
+  runningState[timerID].lastAction = last1;
+  runningState[timerID].nextAction = next1;
+
+  // Check if 1st interval is valid
+  //if (IntervalTimer(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0])){
+  if (r1){
+    r = 1;
+    
+    // Check if whileON Timer is active
+    if (runningTimer.type.whileON){
+      // Check if offset is expired
+      if (timerIN > start1 + runningTimer.offset[1]){
+        // Is 2nd Level ON or OFF
+        r2 = IntervalTimer(timerIN - start1, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1], &start2, &stop2, &last2, &next2);
+        // make result times absolute...
+        start2 += start1; stop2 += start1; last2 += start1, next2 += start1;
+        // last Action
+        runningState[timerID].lastAction = last2;
+        // check if OnTime is active
+        if (r2){
+          // still ON
+          if (next2 < next1){
+            // full inside whileON
+            runningState[timerID].nextAction = next2;
+          }
+          else{
+            // touching or overlapping with whileOFF
+            if (runningTimer.type.whileOFF){
+              // whileOff exist
+              if (runningTimer.offset[2]){
+                // Offset exist
+                runningState[timerID].nextAction = next1;
+              }
+              else{
+                // without offset we stay full onTime On
+                runningState[timerID].nextAction = next1 + runningTimer.onTime[2];
+              }
+            }
+            else{
+              // without whileOFF we're going Off at next1
+              runningState[timerID].nextAction = next1;
+            }
+          }
+        }
+        else{
+          // OffTime active
+          r = 0;
+          if (next2 < next1){
+            // full inside whileON
+            runningState[timerID].nextAction = next2;
+          }
+          else{
+            // touching or overlapping with whileOFF
+            if (runningTimer.type.whileOFF){
+              // whileOff exist
+
+              // we go On on next1
+              runningState[timerID].nextAction = next1 + runningTimer.offset[2];
+            }
+            else{
+              // without whileOFF we're at least Off until whileOff-time ends
+              runningState[timerID].nextAction = stop1 + runningTimer.offset[1];
+            }
+          }
+        }
+      }
+      else{
+        // offset not expired
+        r = 0;   
+        runningState[timerID].nextAction = start1 + runningTimer.offset[1];           
+      }
+    }
+    else if (runningTimer.type.whileOFF){
+      // Never ON whileON - if just whileOFF exist
+      r = 0;
+
+      runningState[timerID].nextAction = next1 + runningTimer.offset[2];
+
+      // To get last Action we need to go back in time (last second of whileOff)
+      r2 = IntervalTimer(runningTimer.offTime[0] - 1, runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2], &start2, &stop2, &last2, &next2);
+      // make result times absolute and realtime...
+      // start2 += start1 - runningTimer.offTime[0]; stop2 += start1 - runningTimer.offTime[0]; last2 += start1 - runningTimer.offTime[0]; next2 += start1 - runningTimer.offTime[0];
+      
+
+      if (r2){
+        // ON, so went off at start1
+        runningState[timerID].lastAction = start1;
+      }
+      else{
+        // OFF
+        runningState[timerID].lastAction = last2 + start1 - runningTimer.offTime[0];
+      }
+    }
+  }
+
+  else{
+    // OFF
+
+    // Check if WhileOff Timer is active
+    if (runningTimer.type.whileOFF){
+      // Check if offset is expired
+      if (timerIN > last1 + runningTimer.offset[2]){
+        // Is 2nd Level ON or OFF
+        r2 = IntervalTimer(timerIN - last1, runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2], &start2, &stop2, &last2, &next2);
+        // make result times absolute...
+        start2 += last1; stop2 += last1; last2 += last1, next2 += last1;
+        // last Action
+        runningState[timerID].lastAction = last2;
+        
+        // check if OnTime is active
+        if (r2){
+          // ON
+          r = 1;
+
+          if (next2 < stop1){
+            // fully inside whileOFF
+            runningState[timerID].nextAction = next2;
+          }
+          else{
+            // touching or overlapping with whileON
+            runningState[timerID].nextAction = stop1;
+            if (runningTimer.type.whileON && !runningTimer.offset[1]){
+              // whileON exist
+              // without offset we stay full onTime1 On
+              runningState[timerID].nextAction += runningTimer.onTime[1];
+            }
+          }
+        }
+        else{
+          // still OFF
+          if (next2 < stop1){
+            // fully inside whileOFF
+            runningState[timerID].nextAction = next2;
+          }
+          else{
+            // touching or overlapping with whileON
+            if (runningTimer.type.whileON){
+              // whileON exist
+              runningState[timerID].nextAction = stop1 + runningTimer.offset[1];
+            }
+            else{
+              // without whileOn we go ON after whileON + offset[2]
+              runningState[timerID].nextAction = stop1 + runningTimer.onTime[0] + runningTimer.offset[2];
+            } 
+          }
+        }
+      }
+      else{
+        // Offset not expired
+        runningState[timerID].nextAction = last1 + runningTimer.offset[2]; 
+      }
+    }
+    else if (runningTimer.type.whileON){
+      // Never ON whileOFF - if just whileON exist
+
+      runningState[timerID].nextAction = stop1 + runningTimer.offset[1];
+
+      // To get last Action we need to go back in time (last second of whileON)
+      r2 = IntervalTimer(runningTimer.onTime[0] - 1, runningTimer.onTime[1], runningTimer.offTime[1], runningTimer.offset[1], &start2, &stop2, &last2, &next2);
+      // make result times absolute and realtime...
+      // start2 += last1 - runningTimer.onTime[0]; stop2 += last1 - runningTimer.onTime[0]; last2 += last1 - runningTimer.onTime[0]; next2 += last1 - runningTimer.onTime[0];
+      
+
+      if (r2){
+        // ON, so went off at last1
+        runningState[timerID].lastAction = last1;
+      }
+      else{
+        // OFF
+        runningState[timerID].lastAction = last2 + last1 - runningTimer.onTime[0];
+      }
+    }      
+  }  
+  return r;
+}
+/*
+byte CalcIntervalTimerOLD(uint32_t timerIN, byte timerID){
 
   byte r = 0;
   uint32_t currentPos = CurrentIntervalPos(timerIN, runningTimer.onTime[0], runningTimer.offTime[0], runningTimer.offset[0]);
@@ -794,11 +1067,16 @@ byte CalcIntervalTimer(uint32_t timerIN, byte timerID){
         if (IntervalTimer(currentPos - runningTimer.onTime[0], runningTimer.onTime[2], runningTimer.offTime[2], runningTimer.offset[2])){
           r = 1;
         }
-      }      
+      }
+      else{
+        // Offset not expired - 
+      }
+            
     }    
   }  
   return r;
 }
+*/
 
 byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
 
