@@ -576,7 +576,7 @@ void PrintMenuNo(char number){
   PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
 }
 
-void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
+void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printType){
 
   // "timer" - the timer-id
   // "posX & posY" - if set, set cursor position
@@ -605,9 +605,12 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
   Serial.print(F("| "));
 
   // Type 11 chars
-  if (type == 1){
+  if (printType == 1){
     // Print Timer-Type
-    if (runningTimer.type.interval){
+    if (runningTimer.type.dayTimer == 1){
+      Serial.print(F("  24h   "));
+    }
+    else if (runningTimer.type.interval){
       if (runningTimer.type.whileON && runningTimer.type.whileOFF){
         // whileOn and whileOff
         Serial.print(F("IntOnOff"));
@@ -620,20 +623,17 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
         // whileOff
         Serial.print(F("InterOFF"));
       }
-      if (!runningTimer.type.whileON && !runningTimer.type.whileOFF){
+      else{
         // just Interval
         Serial.print(F("Interval"));
       } 
     }    
-    else if (runningTimer.type.dayTimer == 1){
-      Serial.print(F("  24h   "));
-    }
     else{
       EscFaint(1);
       Serial.print(F("Disabled"));
     }
   }
-  else if (type == 2){
+  else if (printType == 2){
     // Print Time
     PrintSerTime(myTime, 0);
   }
@@ -719,12 +719,14 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
   EscColor(0);
   PrintSpacer(0);
 
+/*
   uint32_t onDuration;
   uint32_t offDuration;
   uint32_t offset;
   uint32_t currentPos;
   uint32_t interval;
   uint32_t timeToUse;
+*/
 
   if (runningTimer.state.permOn || runningTimer.state.permOff){
     // Permanent On/Off
@@ -741,6 +743,27 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
   }
   else if (runningTimer.state.automatic){
     // Automatic
+    if (runningTimer.state.lastVal){
+      // On since -> until
+      EscColor(fgGreen);
+      PrintSerTime(runningState[timerID].lastAction, 0);
+      EscColor(39);
+      Serial.print(F(" - "));
+      EscColor(fgRed);
+    }
+    else{
+      // Off since -> until
+      EscColor(fgRed);
+      PrintSerTime(runningState[timerID].lastAction, 0);
+      EscColor(39);
+      Serial.print(F(" - "));
+      EscColor(fgGreen);
+    }
+    PrintSerTime(runningState[timerID].nextAction, 0);
+    EscColor(39);
+    PrintSpacer(0);
+
+/*
     if (runningTimer.type.dayTimer){
       // 24h Day-Timer
       if (runningTimer.offTime[0] < runningTimer.onTime[0]){
@@ -806,6 +829,7 @@ void PrintTimerLine1(byte timer, byte posX, byte posY, byte name, byte type){
     PrintSerTime(timeToUse, 0);
     EscColor(39);
     PrintSpacer(0);
+*/
   }
 }
 

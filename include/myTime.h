@@ -1094,7 +1094,13 @@ byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
   
   uint32_t offDuration = 86400L - onDuration;
 
-  return IntervalTimer(timerIN, onDuration, offDuration, onTime);
+  uint32_t start = 0;
+  uint32_t stop = 0;
+  uint32_t last = 0;
+  uint32_t next = 0;
+ 
+
+  return IntervalTimer(timerIN, onDuration, offDuration, onTime, &start, &stop, &last, &next);
 
 }
 
