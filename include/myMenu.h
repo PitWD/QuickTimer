@@ -587,28 +587,25 @@ void PrintMenuNo(char number){
   PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
 }
 
-void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printType){
+void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte printType){
 
-  // "timer" - the timer-id
-  // "posX & posY" - if set, set cursor position
-  // "name" - if the 'static' name is printed
-  // "type" - 0 = type-area untouched
-  //        - 1 = timer-type
-  //        - 2 = last port-set-time
+  // "timerID"      - the timer-id
+  // "posX & posY"  - if set, set cursor position
+  // "printName"    - if the 'static' name is printed
+  // "printType"    - 0 = type-area untouched
+  //                - 1 = timer-type
+  //                - 2 = last set/change/temp-start/end time
 
   if (posX && posY){
     EscLocate(posX, posY);
   }
     
   // Name 16 chars
-  if (name){
+  if (printName){
     EscBold(1);
     Serial.print(runningTimer.name);
     EscBold(0);
-    byte len = 16 - strlen(runningTimer.name);
-    while (len--){
-      Serial.print(F(" "));
-    }
+    PrintSpaces(16 - strlen(runningTimer.name));
   }
   else{
     EscCursorRight(16);
@@ -666,12 +663,12 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printTy
     EscColor(fgGreen);
     Serial.print(F("perm. ON"));
   }
-  else if (runningTimer.state.tempOff && myTime < runningTimer.tempUntil){
+  else if (runningTimer.state.tempOff && myTime < runningState[timerID].tempUntil){
     EscFaint(1);
     EscColor(fgRed);
     Serial.print(F("temp.OFF"));
   }
-  else if (runningTimer.state.tempOn && myTime < runningTimer.tempUntil){
+  else if (runningTimer.state.tempOn && myTime < runningState[timerID].tempUntil){
     EscFaint(1);
     EscColor(fgGreen);
     Serial.print(F("temp. ON"));
@@ -701,12 +698,12 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printTy
     EscColor(fgGreen);
     Serial.print(F(" ON"));
   }
-  else if (runningTimer.state.tempOff && myTime < runningTimer.tempUntil){
+  else if (runningTimer.state.tempOff && myTime < runningState[timerID].tempUntil){
     EscFaint(1);
     EscColor(fgRed);
     Serial.print(F("OFF"));
   }
-  else if (runningTimer.state.tempOn && myTime < runningTimer.tempUntil){
+  else if (runningTimer.state.tempOn && myTime < runningState[timerID].tempUntil){
     EscFaint(1);
     EscColor(fgGreen);
     Serial.print(F(" ON"));
@@ -740,7 +737,7 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printTy
   else if (runningTimer.state.tempOn || runningTimer.state.tempOff){
     // Temporary On/Off
     Serial.print(F("     "));
-    PrintSerTime(runningTimer.tempUntil,0);
+    PrintSerTime(runningState[timerID].tempUntil,0);
     Serial.print(F("      "));
     PrintSpacer(0);
   }
@@ -765,74 +762,6 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printTy
     PrintSerTime(runningState[timerID].nextAction, 0);
     EscColor(39);
     PrintSpacer(0);
-
-/*
-    if (runningTimer.type.dayTimer){
-      // 24h Day-Timer
-      if (runningTimer.offTime[0] < runningTimer.onTime[0]){
-        // Midnight Jump
-        onDuration = (86400UL - runningTimer.onTime[0]) + runningTimer.offTime[0];
-      }
-      else{
-        onDuration = runningTimer.offTime[0] - runningTimer.onTime[0];
-      }
-      offDuration = 86400UL - onDuration;
-      offset = runningTimer.onTime[0];
-      timeToUse = myTime;
-    }
-    else{
-      // Interval (all)
-      onDuration = runningTimer.onTime[0];
-      offDuration = runningTimer.offTime[0];
-      offset = runningTimer.offset[0];
-      timeToUse = myTime;
-
-      currentPos = CurrentIntervalPos(myTime, onDuration, offDuration, offset);
-
-      if (currentPos < onDuration){
-        // 1st Interval is ON
-        if (runningTimer.type.whileON){
-          timeToUse = currentPos;
-          onDuration = runningTimer.onTime[1];
-          offDuration = runningTimer.offTime[1];
-          offset = runningTimer.offset[1];
-        }
-      }
-      else{
-      // 1st Interval is OFF
-      if (runningTimer.type.whileOFF){
-          timeToUse = currentPos - runningTimer.onTime[0];
-          onDuration = runningTimer.onTime[2];
-          offDuration = runningTimer.offTime[2];
-          offset = runningTimer.offset[2];
-        }    
-      }
-    }
-    
-    currentPos = CurrentIntervalPos(timeToUse, onDuration, offDuration, offset);
-    interval = onDuration + offDuration;
-    if (currentPos < onDuration){
-      // On since -> until
-      EscColor(fgGreen);
-      PrintSerTime(myTime - currentPos, 0);
-      EscColor(39);
-      Serial.print(F(" - "));
-      EscColor(fgRed);
-      timeToUse = (myTime - currentPos) + onDuration;
-    }
-    else{
-      // Off since -> until
-      EscColor(fgRed);
-      PrintSerTime(myTime - currentPos + onDuration, 0);
-      EscColor(39);
-      Serial.print(F(" - "));
-      EscColor(fgGreen);
-      timeToUse = (myTime - currentPos) + interval + offset;
-    }
-    PrintSerTime(timeToUse, 0);
-    EscColor(39);
-    PrintSpacer(0);
-*/
   }
 }
 

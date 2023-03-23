@@ -82,7 +82,6 @@ void TimerFromRomRam(byte timer, byte ram){
     runningTimer.state.lastVal = runningState[timer].state.lastVal;
     runningTimer.state.hasChanged = runningState[timer].state.hasChanged;
     runningTimer.state.automatic = runningState[timer].state.automatic;
-    runningTimer.tempUntil = runningState[timer].tempUntil;
   }
 }
 
@@ -95,14 +94,12 @@ void TimerToRomRam(byte timer, byte rom){
   runningState[timer].state.lastVal = runningTimer.state.lastVal;
   runningState[timer].state.hasChanged = runningTimer.state.hasChanged;
   runningState[timer].state.automatic = runningTimer.state.automatic;
-  runningState[timer].tempUntil = runningTimer.tempUntil;
   if (rom){
     // Save the lasting stuff to eeprom, too...
     runningTimer.state.tempOff = 0;
     runningTimer.state.tempOn = 0;
     runningTimer.state.lastVal = 0;
     runningTimer.state.hasChanged = 0;
-    runningTimer.tempUntil = 0;
     EEPROM.put(timer * sizeof(TimerSTRUCT), runningTimer);
   }
 }
@@ -951,7 +948,7 @@ byte CalcIntervalTimer(uint32_t timerIN, byte timerID){
   return r;
 }
 
-byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
+byte DayTimer (byte timerID, uint32_t onTime, uint32_t offTime){
 
   // ordinary 24h timer
 
@@ -973,7 +970,7 @@ byte DayTimer (uint32_t timerIN, uint32_t onTime, uint32_t offTime){
   uint32_t next = 0;
  
 
-  return IntervalTimer(timerIN, onDuration, offDuration, onTime, &start, &stop, &last, &next);
+  return IntervalTimer(timerID, onDuration, offDuration, onTime, &start, &stop, &last, &next);
 
 }
 
@@ -1023,10 +1020,10 @@ byte RunTimers(){
     else if (runningTimer.state.permOn){
       r = 1;
     }
-    else if (runningTimer.state.tempOff && myTime < runningTimer.tempUntil){
+    else if (runningTimer.state.tempOff && myTime < runningState[i].tempUntil){
       r = 0;
     }
-    else if (runningTimer.state.tempOn && myTime < runningTimer.tempUntil){
+    else if (runningTimer.state.tempOn && myTime < runningState[i].tempUntil){
       r = 1;
     }
     else if (runningTimer.state.automatic){
@@ -1051,8 +1048,8 @@ byte RunTimers(){
       // runningTimer.state.hasChanged = 0;
     }
     // Clear Temp-Times and States if possible
-    if (runningTimer.tempUntil && (myTime >= runningTimer.tempUntil)){
-      runningTimer.tempUntil = 0;
+    if (runningState[i].tempUntil && (myTime >= runningState[i].tempUntil)){
+      runningState[i].tempUntil = 0;
       runningTimer.state.tempOn = 0;
       runningTimer.state.tempOff = 0;
       runningTimer.state.hasChanged = 1;
