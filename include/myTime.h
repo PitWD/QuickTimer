@@ -1048,7 +1048,7 @@ byte RunTimers(){
       r2 = 1;
     }
     else{
-      runningTimer.state.hasChanged = 0;
+      // runningTimer.state.hasChanged = 0;
     }
     // Clear Temp-Times and States if possible
     if (runningTimer.tempUntil && (myTime >= runningTimer.tempUntil)){

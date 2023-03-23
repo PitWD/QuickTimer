@@ -89,6 +89,7 @@ void loop() {
             TimerFromRomRam(i, 1);
             PrintTimerLine1(i, 9, pos, 0, 2);
             digitalWrite(i + 2, runningState[i].state.lastVal);
+            runningState[i].state.hasChanged = 0;
           }
           pos++; 
         }

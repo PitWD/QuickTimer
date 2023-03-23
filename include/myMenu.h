@@ -1324,6 +1324,7 @@ void PrintMainMenu(){
 
 Start:
 
+  // To see right Last/Next after StartUp und changes...
   RunTimers();
 
   char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.02 -");
