@@ -98,7 +98,7 @@ void loop() {
     }
     
     // Print Runtime
-    EscLocate(66,1);
+    EscLocate(67,1);
     EscInverse(1);
     PrintRunTime();    
     // Print Realtime
