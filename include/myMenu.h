@@ -67,7 +67,7 @@ void PrintCharsCnt(char charToPrint, byte cnt){
 #define PrintSpaces(cnt) PrintCharsCnt(' ', cnt)
 
 void Print1Space(void){
-  Serial.print(F(" "));
+  PrintSpaces(1);
 }
 
 #if SMALL_GetUserVal
