@@ -4,6 +4,7 @@
 #define RUNNING_TIMERS_CNT 16
 #define SMALL_GetUserVal 1  // No floating-point support...
 
+void Print1Space(void);
 struct TimerSTRUCT{
   uint32_t onTime[3];
   uint32_t offTime[3];
@@ -531,7 +532,8 @@ void PrintRunTime(){
 
 void PrintDateTime(){
     PrintHlpDate(myDay, myMonth, myYear);
-    Serial.print(F(" "));
+    //Serial.print(F(" "));
+    Print1Space();
     PrintHlpTime(myHour, myMin, mySec);
 }
 

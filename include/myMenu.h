@@ -66,6 +66,10 @@ void PrintCharsCnt(char charToPrint, byte cnt){
 }
 #define PrintSpaces(cnt) PrintCharsCnt(' ', cnt)
 
+void Print1Space(void){
+  Serial.print(F(" "));
+}
+
 #if SMALL_GetUserVal
 #else
   long StrToInt(char *strIN, byte next){
@@ -176,7 +180,7 @@ void PrintErrorOK(char err, char ezo, char *strIN){
 
   len = 80 - len;
   for (int i = 0; i < len; i++){
-    Serial.print(F(" "));
+    Print1Space();
   }
   
   PrintDateTime();
@@ -315,7 +319,7 @@ byte GetUserString(char *strIN){
               if (pos < eos){
                 memmove(&strHLP[pos], &strHLP[pos + 1], eos - pos);
                 Serial.print(&strHLP[pos]);
-                Serial.print(F(" "));
+                Print1Space();
                 EscCursorLeft(eos - pos);
                 eos--;
               }
@@ -332,7 +336,7 @@ byte GetUserString(char *strIN){
           eos--;
           pos--;
           EscCursorLeft(1);
-          Serial.print(F(" "));
+          Print1Space();
           EscCursorLeft(1);
           strHLP[eos] = 0;
         }
@@ -342,7 +346,7 @@ byte GetUserString(char *strIN){
           memmove(&strHLP[pos], &strHLP[pos + 1], eos - pos + 2);
           EscCursorLeft(1);
           Serial.print(&strHLP[pos]);
-          Serial.print(F(" "));
+          Print1Space();
           EscCursorLeft(eos - pos);
           eos--;
         }                
@@ -555,7 +559,7 @@ void PrintMenuKey(char key, byte space, char leadChar, char trailChar, byte colo
   // "bold" sets/keeps bold on exit
 
   if (space){
-    Serial.print(F(" "));
+    Print1Space();
   }
   EscBold(1);
   EscUnder(1);
@@ -606,11 +610,11 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
     Serial.print(runningTimer.name);
     EscBold(0);
     PrintSpaces(16 - strlen(runningTimer.name));
+    Serial.print(F("| "));
   }
   else{
     EscCursorRight(16);
   }  
-  Serial.print(F("| "));
 
   // Type 11 chars
   if (printType == 1){
