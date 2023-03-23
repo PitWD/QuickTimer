@@ -592,6 +592,12 @@ void PrintMenuNo(char number){
   PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
 }
 
+void PrintOFF(void){
+  Serial.print(F("OFF"));
+}
+void PrintON(void){
+  Serial.print(F(" ON"));
+}
 void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte printType){
 
   // "timerID"      - the timer-id
@@ -697,31 +703,31 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
   if (runningTimer.state.permOff){
     EscBold(1);
     EscColor(fgRed);
-    Serial.print(F("OFF"));
+    PrintOFF();
   }
   else if (runningTimer.state.permOn){
     EscBold(1);
     EscColor(fgGreen);
-    Serial.print(F(" ON"));
+    PrintON();
   }
   else if (runningTimer.state.tempOff && myTime < runningState[timerID].tempUntil){
     EscFaint(1);
     EscColor(fgRed);
-    Serial.print(F("OFF"));
+    PrintOFF();
   }
   else if (runningTimer.state.tempOn && myTime < runningState[timerID].tempUntil){
     EscFaint(1);
     EscColor(fgGreen);
-    Serial.print(F(" ON"));
+    PrintON();
   }
   else if (runningTimer.state.automatic){
     if (runningTimer.state.lastVal){
       EscColor(fgGreen);
-      Serial.print(F(" ON"));
+      PrintON();
     }
     else{
       EscColor(fgRed);
-      Serial.print(F("OFF"));
+      PrintOFF();
     }
   }
   else{
@@ -935,12 +941,13 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
       // whileON
       PrintSerTime(runningTimer.offset[1], 0);
       PrintMenuNo('6');
-    }
+      PrintSpacer(0);  
+  }
     else if (runningTimer.type.whileOFF){
       // whileOFF exist
       PrintTimerTableNA();
+      PrintSpacer(0);  
     }
-    PrintSpacer(0);  
     if (runningTimer.type.whileOFF){
       // whileOFF
       PrintSerTime(runningTimer.offset[2], 0);
