@@ -6,6 +6,8 @@
 #define IIC_STR_LEN 34
 #define IIC_HLP_LEN 17
 
+#define USE_ATLAS_PRTCL 0
+
 byte myAddress = 123;
 
 // global IIC I/O buffer
@@ -29,7 +31,10 @@ char IICgETsTRING(byte address, byte atlasValidity, byte readBin, byte readBinBy
   
     char count = 0;
     int i2c_error;
-    byte firstChar = 1;
+    
+    #if USE_ATLAS_PRTCL
+        byte firstChar = 1;
+    #endif
 
     iicStr[0] = 0;
 
@@ -40,37 +45,39 @@ char IICgETsTRING(byte address, byte atlasValidity, byte readBin, byte readBinBy
 
         byte c = Wire.read();
 
-        if (firstChar && atlasValidity){
-            // 1st char in a atlas answer indicates the answers "quality"
-            // 255 = no data to send
-            // 254 = still processing
-            // 2 = syntax error
-            // 1 = valid
+        #if USE_ATLAS_PRTCL
+            if (firstChar && atlasValidity){
+                // 1st char in a atlas answer indicates the answers "quality"
+                // 255 = no data to send
+                // 254 = still processing
+                // 2 = syntax error
+                // 1 = valid
 
-            if (c == 1){
-                // Dummy to prevent break
-                count = 1;
-            }
-            else if (c == 255){
+                if (c == 1){
+                    // Dummy to prevent break
+                    count = 1;
+                }
+                else if (c == 255){
+                    count = 0;
+                }
+                else if (c == 254){
+                    count = -1;
+                }
+                else if (c == 2){
+                    count = -2;
+                }
+                else{
+                    count = -4;
+                }
+
+                if (count < 1){
+                    break;
+                }
                 count = 0;
-            }
-            else if (c == 254){
-                count = -1;
-            }
-            else if (c == 2){
-                count = -2;
+                firstChar = 0; 
             }
             else{
-                count = -4;
-            }
-
-            if (count < 1){
-                break;
-            }
-            count = 0;
-            firstChar = 0; 
-        }
-        else{
+        #endif
             // regular chars
 
             iicStr[(int)count] = ByteToChar(c);
@@ -83,7 +90,10 @@ char IICgETsTRING(byte address, byte atlasValidity, byte readBin, byte readBinBy
             count++;
 
             iicStr[(int)count] = 0;
-        }    
+            
+        #if USE_ATLAS_PRTCL
+            }    
+        #endif
     }
 
     i2c_error = Wire.endTransmission();  // Check for I2C communication errors
@@ -96,7 +106,9 @@ char IICgETsTRING(byte address, byte atlasValidity, byte readBin, byte readBinBy
     }
 }
 #define IIcGetStr(address) IICgETsTRING(address, 0, 0, IIC_STR_LEN - 1)
-#define IIcGetAtlas(address) IICgETsTRING(address, 1, 0, IIC_STR_LEN - 1)
+#if USE_ATLAS_PRTCL
+    #define IIcGetAtlas(address) IICgETsTRING(address, 1, 0, IIC_STR_LEN - 1)
+#endif
 #define IIcGetBytes(address, byteCnt) IICgETsTRING(address, 0, 1, byteCnt)
 
 char IICsEtSTR(byte address, char *strIN, byte term, byte setBin, byte setBinBytes){
