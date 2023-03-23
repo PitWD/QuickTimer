@@ -484,32 +484,6 @@ void DayTimeDateToStr_DRAFT(byte hourDay, byte minuteMonth, uint16_t secondYear,
 #define DayTimeToStr(hour, minute, second) DayTimeDateToStr_DRAFT(hour, minute, second, ':', 2)
 #define DateToStr(day, month, year) DayTimeDateToStr_DRAFT(day, month, year, '.', 4)
 
-/*
-void DayTimeToStr(byte hour, byte minute, byte second){
-  IntToStr_SMALL(hour, 2, '0');
-  strcpy(strHLP2, strHLP);
-  strHLP2[2] = ':';
-  IntToStr_SMALL(minute, 2, '0');
-  strcpy(strHLP2 + 3, strHLP);
-  strHLP2[5] = ':';
-  IntToStr_SMALL(second, 2, '0');
-  strcpy(strHLP2 + 6, strHLP);
-  strHLP2[8] = 0;
-}
-
-void DateToStr(byte day, byte month, uint16_t year){
-  IntToStr_SMALL(day, 2, '0');
-  strcpy(strHLP2, strHLP);
-  strHLP2[2] = '.';
-  IntToStr_SMALL(month, 2, '0');
-  strcpy(strHLP2 + 3, strHLP);
-  strHLP2[5] = '.';
-  IntToStr_SMALL(year, 4, '0');
-  strcpy(strHLP2 + 6, strHLP);
-  strHLP2[10] = 0;
-}
-*/
-
 void PrintHlpTime(byte hourIN, byte minIN, byte secIN){
     DayTimeToStr(hourIN, minIN, secIN);
     Serial.print(strHLP2);

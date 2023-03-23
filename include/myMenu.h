@@ -1324,6 +1324,8 @@ void PrintMainMenu(){
 
 Start:
 
+  RunTimers();
+
   char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.02 -");
   
   uint32_t hlpDate = 0;
