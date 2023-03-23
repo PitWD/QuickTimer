@@ -2,7 +2,7 @@
 #include "myIIC.h"
 #include "myTime.h"
 
-#define SMALL_GetUserVal 1
+#define SMALL_GetUserVal 1  // No floating-point support...
 
 
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
@@ -188,6 +188,8 @@ void PrintErrorOK(char err, char ezo, char *strIN){
 
 byte GetUserString(char *strIN){
   
+  // my tiny edlin...
+
   char c = 0;
   byte timeOut = 60;
   byte eos = strlen(strIN);   // Position of EndOfString
@@ -388,8 +390,10 @@ byte GetUserString(char *strIN){
 }
 
 #if SMALL_GetUserVal
+  // just integer
   long GetUserVal(long defVal){
 #else
+  // floating's, too
   long GetUserVal(long defVal, byte type){
 #endif
   // type:  0 = int as it is
@@ -397,11 +401,13 @@ byte GetUserString(char *strIN){
   
   // Set strHLP2 to representation of defVal
   #if SMALL_GetUserVal
+    // just integer
     ltoa(defVal, strHLP2, 10);
     if (GetUserString(strHLP2)){
       defVal = atol(strHLP);
     }
   #else
+    // floating's, too
     if (type){
       // Is scaled float
       IntToStr(defVal, 1, 3, ' ');
@@ -488,9 +494,6 @@ byte PrintLine(byte pos, byte start, byte len){
   }
   PrintCharsCnt('-', len);
   
-  //for (int i = 0; i < len; i++){
-    //Serial.print(F("-"));
-  //}
   return pos;
 }
 #define PrintShortLine(pos, posX) PrintLine(pos, posX, 3)
@@ -719,15 +722,7 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte name, byte printTy
   EscColor(0);
   PrintSpacer(0);
 
-/*
-  uint32_t onDuration;
-  uint32_t offDuration;
-  uint32_t offset;
-  uint32_t currentPos;
-  uint32_t interval;
-  uint32_t timeToUse;
-*/
-
+  // Last & Next Action...
   if (runningTimer.state.permOn || runningTimer.state.permOff){
     // Permanent On/Off
     EscFaint(1);
