@@ -170,7 +170,8 @@ void PrintErrorOK(char err, char ezo, char *strIN){
     EscBold(1);
   }
   
-  Serial.print(F("    "));
+  PrintSpaces(4);
+  //Serial.print(F("    "));
   Serial.print(strIN);
   EscBold(0);
   EscColor(49);
@@ -613,13 +614,14 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
     Serial.print(F("| "));
   }
   else{
-    EscCursorRight(16);
+    EscCursorRight(18);
   }  
 
   // Type 11 chars
   if (printType == 1){
     // Print Timer-Type
     if (runningTimer.type.dayTimer == 1){
+      //PrintSpaces(2);
       Serial.print(F("  24h   "));
     }
     else if (runningTimer.type.interval){
@@ -735,14 +737,18 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
   if (runningTimer.state.permOn || runningTimer.state.permOff){
     // Permanent On/Off
     EscFaint(1);
-    Serial.print(F("        N/A        "));
+    PrintSpaces(8);
+    Serial.print(F("N/A"));
+    PrintSpaces(8);
     PrintSpacer(0);
   }
   else if (runningTimer.state.tempOn || runningTimer.state.tempOff){
     // Temporary On/Off
-    Serial.print(F("     "));
+    PrintSpaces(5);
+    //Serial.print(F("     "));
     PrintSerTime(runningState[timerID].tempUntil,0);
-    Serial.print(F("      "));
+    PrintSpaces(6);
+    //Serial.print(F("      "));
     PrintSpacer(0);
   }
   else if (runningTimer.state.automatic){
