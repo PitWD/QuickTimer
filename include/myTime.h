@@ -30,7 +30,7 @@ struct TimerSTRUCT{
     byte lastVal      :1;
     byte hasChanged   :1;
   }state;
-  uint32_t tempUntil;
+  uint32_t realOffTime;
   char name[17];
 }runningTimer;
 
@@ -532,7 +532,6 @@ void PrintRunTime(){
 
 void PrintDateTime(){
     PrintHlpDate(myDay, myMonth, myYear);
-    //Serial.print(F(" "));
     Print1Space();
     PrintHlpTime(myHour, myMin, mySec);
 }
@@ -950,6 +949,7 @@ byte CalcIntervalTimer(uint32_t timerIN, byte timerID){
   return r;
 }
 
+/*
 byte DayTimer (byte timerID, uint32_t onTime, uint32_t offTime){
 
   // ordinary 24h timer
@@ -975,6 +975,7 @@ byte DayTimer (byte timerID, uint32_t onTime, uint32_t offTime){
   return IntervalTimer(timerID, onDuration, offDuration, onTime, &start, &stop, &last, &next);
 
 }
+*/
 
 // Returns the state of the bit at position 'bitToGet' in 'byteIN'
 byte getBit(byte byteIN, byte bitToGet) {
@@ -1002,11 +1003,12 @@ byte RunTimers(){
     // Load Timer
     TimerFromRomRam(i, 1);
     
+    /*
     if (runningTimer.type.dayTimer){
       // 24h DayTimer...
       r = DayTimer(myTime, runningTimer.onTime[0], runningTimer.offTime[0]);
     }
-    else if (runningTimer.type.interval){
+    else*/ if (runningTimer.type.interval || runningTimer.type.dayTimer){
       // Interval Timer(s)
       r = CalcIntervalTimer(myTime, i);
     }

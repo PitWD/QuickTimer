@@ -789,6 +789,10 @@ void PrintTimerUnderLine(byte bold){
   EscBold(1);
 }
 
+void PrintTimerTableNA(void){
+  Serial.print(F("   NA    ( )"));
+}
+
 byte PrintTimerTable(byte timer, byte posX, byte posY){
   
   byte r2 = 3;
@@ -845,7 +849,14 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     EscBold(0);
     Serial.print(F(":"));
     PrintSpacer(0);
-    PrintSerTime(runningTimer.onTime[0], 0);
+    if (runningTimer.type.dayTimer){
+      // !! 24h Day Timer !!
+      PrintSerTime(runningTimer.offset[0], 0);
+    }
+    else{
+      PrintSerTime(runningTimer.onTime[0], 0);
+    }
+    
     PrintMenuNo('1');
     PrintSpacer(0);
     if (runningTimer.type.whileON){
@@ -856,7 +867,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     }
     else if (runningTimer.type.whileOFF){
       // whileOFF exist
-      Serial.print(F("   NA    ( )"));
+      PrintTimerTableNA();
       PrintSpacer(0);
     }  
     if (runningTimer.type.whileOFF){
@@ -875,7 +886,13 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     EscBold(0);
     Serial.print(F(":"));
     PrintSpacer(0);
-    PrintSerTime(runningTimer.offTime[0], 0);
+    if (runningTimer.type.dayTimer){
+      PrintSerTime(runningTimer.realOffTime, 0);
+    }
+    else{
+      PrintSerTime(runningTimer.offTime[0], 0);
+    }
+        
     PrintMenuNo('2');
     PrintSpacer(0);
     if (runningTimer.type.whileON){
@@ -886,7 +903,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     }
     else if (runningTimer.type.whileOFF){
       // whileOFF exist
-      Serial.print(F("   NA    ( )"));
+      PrintTimerTableNA();
       PrintSpacer(0);
     }  
     if (runningTimer.type.whileOFF){
@@ -898,28 +915,32 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
   }
 
   // Offset-Line
-  if (runningTimer.type.interval){
+  if (runningTimer.type.interval || runningTimer.type.dayTimer){
     // Interval
     PrintTimerUnderLine(0);
     Serial.print(F("  OffSet"));
     EscBold(0);
     Serial.print(F(":"));
     PrintSpacer(0);
-    PrintSerTime(runningTimer.offset[0], 0);
-    PrintMenuNo('3');
+    if (runningTimer.type.dayTimer){
+      PrintTimerTableNA();
+    }
+    else{
+      PrintSerTime(runningTimer.offset[0], 0);
+      PrintMenuNo('3');
+    }
     PrintSpacer(0);
     r2++; // += 2;
     if (runningTimer.type.whileON){
       // whileON
       PrintSerTime(runningTimer.offset[1], 0);
       PrintMenuNo('6');
-      PrintSpacer(0);
     }
     else if (runningTimer.type.whileOFF){
       // whileOFF exist
-      Serial.print(F("   NA    ( )"));
-      PrintSpacer(0);
-    }  
+      PrintTimerTableNA();
+    }
+    PrintSpacer(0);  
     if (runningTimer.type.whileOFF){
       // whileOFF
       PrintSerTime(runningTimer.offset[2], 0);
@@ -1048,11 +1069,21 @@ Start:
     break;
   case '1':
     // OnTime
-    runningTimer.onTime[0] = GetUserTime(runningTimer.onTime[0]);
+    if (runningTimer.type.dayTimer){
+      runningTimer.offset[0] = GetUserTime(runningTimer.offset[0]);
+    }
+    else{
+      runningTimer.onTime[0] = GetUserTime(runningTimer.onTime[0]);
+    }    
     break;
   case '2':
     // OffTime
-    runningTimer.offTime[0] = GetUserTime(runningTimer.offTime[0]);
+    if (runningTimer.type.dayTimer){
+      runningTimer.realOffTime = GetUserTime(runningTimer.realOffTime);
+    }
+    else{
+      runningTimer.offTime[0] = GetUserTime(runningTimer.offTime[0]);
+    }
     break;
   case '3':
     // Offset
@@ -1092,26 +1123,26 @@ Start:
   case 'b':
     // Double IntervalTimer
     runningTimer.type.whileON = !runningTimer.type.whileON;
-    if (runningTimer.type.whileON || runningTimer.type.whileOFF){
+    if ((runningTimer.type.whileON || runningTimer.type.whileOFF) && !runningTimer.type.dayTimer){
       runningTimer.type.interval = 1;
     }  
     // runningTimer.type.whileOFF = 0;
-    runningTimer.type.dayTimer = 0;
+    //day//runningTimer.type.dayTimer = 0;
     break;
   case 'c':
     // Triple IntervalTimer
     runningTimer.type.whileOFF = !runningTimer.type.whileOFF;
-    if (runningTimer.type.whileOFF || runningTimer.type.whileON){
+    if ((runningTimer.type.whileOFF || runningTimer.type.whileON) && !runningTimer.type.dayTimer){
       runningTimer.type.interval = 1;
     }  
     // runningTimer.type.whileON = 0;
-    runningTimer.type.dayTimer = 0;
+    //day//runningTimer.type.dayTimer = 0;
     break;
   case 'd':
     // 24h Timer
     runningTimer.type.interval = 0;
-    runningTimer.type.whileON = 0;
-    runningTimer.type.whileOFF = 0;
+    //day//runningTimer.type.whileON = 0;
+    //day//runningTimer.type.whileOFF = 0;
     runningTimer.type.dayTimer = 1;
     break;
   case 'e':
@@ -1206,6 +1237,20 @@ Start:
   default:
     break;
   }
+  if (runningTimer.type.dayTimer && (pos == '1' || pos == '2' || pos == 'd')){
+    // Calc 24Day Timer Values into Interval + offset
+    if (runningTimer.realOffTime < runningTimer.offset[0]){
+      // Jump over Midnight
+      runningTimer.onTime[0] = (86400L - runningTimer.offset[0]) + runningTimer.realOffTime;
+    }
+    else{
+      runningTimer.onTime[0] = runningTimer.realOffTime - runningTimer.offset[0];
+    }
+    
+    runningTimer.offTime[0] = 86400L - runningTimer.onTime[0];
+
+  }
+  
   if (pos > 0){
     if (pos != 't'){
       isChanged = 1;
