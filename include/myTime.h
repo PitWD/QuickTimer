@@ -470,6 +470,21 @@ uint32_t StrToDate(char *dateIN){
     return SerializeTime(day, month, year, 0 , 0 ,0);
 }
 
+void DayTimeDateToStr_DRAFT(byte hourDay, byte minuteMonth, uint16_t secondYear, char delimiterChar, byte lastLen){
+  IntToStr_SMALL(hourDay, 2, '0');
+  strcpy(strHLP2, strHLP);
+  strHLP2[2] = delimiterChar;
+  IntToStr_SMALL(minuteMonth, 2, '0');
+  strcpy(strHLP2 + 3, strHLP);
+  strHLP2[5] = delimiterChar;
+  IntToStr_SMALL(secondYear, lastLen, '0');
+  strcpy(strHLP2 + 6, strHLP);
+  strHLP2[6 + lastLen] = 0;
+}
+#define DayTimeToStr(hour, minute, second) DayTimeDateToStr_DRAFT(hour, minute, second, ':', 2)
+#define DateToStr(day, month, year) DayTimeDateToStr_DRAFT(day, month, year, '.', 4)
+
+/*
 void DayTimeToStr(byte hour, byte minute, byte second){
   IntToStr_SMALL(hour, 2, '0');
   strcpy(strHLP2, strHLP);
@@ -493,6 +508,7 @@ void DateToStr(byte day, byte month, uint16_t year){
   strcpy(strHLP2 + 6, strHLP);
   strHLP2[10] = 0;
 }
+*/
 
 void PrintHlpTime(byte hourIN, byte minIN, byte secIN){
     DayTimeToStr(hourIN, minIN, secIN);
