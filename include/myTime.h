@@ -2,6 +2,7 @@
 #include <EEPROM.h>
 
 #define RUNNING_TIMERS_CNT 16
+#define SMALL_GetUserVal 1  // No floating-point support...
 
 struct TimerSTRUCT{
   uint32_t onTime[3];
@@ -308,68 +309,104 @@ char RTC_SetDateTime(){
 
 }
 
-char IntToStr(long val, char lz, byte dp, char lc){
+#if SMALL_GetUserVal
+  // Just Integer
 
-    // dp = decimal places
-    // lz = leading zero's
-    // lc = leading char for zero
-    // return = position of decimal point
+  char IntToStr_SMALL(long val, char leadingZeros, char leadingChar){
 
-    // int (scaled by 1000)
-    ltoa(val, strHLP, 10);
-    byte len = strlen(strHLP);
+      // return = len of string
 
-    if (len < 4){
-        // value is < 1 (1000)
-        memmove(&strHLP[4 - len], &strHLP[0], len);
-        memset(&strHLP[0], '0', 4 - len);
-        len = 4;
-    }
-    
-    // Set leading zero's
-    lz -= (len - 3);
-    if (lz > 0){
-        // space for missing zeros
-        memmove(&strHLP[(int)lz], &strHLP[0], len);
-        // set missing zeros
-        memset(&strHLP[0], lc, lz);
-        // correct len
-        len += lz;        
-    }
+      // "leadingZeros MUST BE SIGNED !! "
 
-    // shift dp's to set decimal point
-    memmove(&strHLP[len -2], &strHLP[len - 3], 3);
-    // set decimal point
-    strHLP[len - 3] = '.';
-    len++;
+      // int (NOT scaled by 1000 - see regular IntToStr())
+      ltoa(val, strHLP, 10);
+      byte len = strlen(strHLP);
 
-    // Trailing zero's
-    lz = dp + lz - len + 2;
-    if (lz > 0){
-        // missing trailing zero's
-        memset(&strHLP[len], '0', lz);
-        len += lz;
-    }
+      
+      // Set leading zero's
+      leadingZeros -= len;
+      if (leadingZeros > 0){
+          // space for missing zeros
+          memmove(&strHLP[(int)leadingZeros], &strHLP[0], len);
+          // set missing zeros
+          memset(&strHLP[0], leadingChar, leadingZeros);
+          // correct len
+          len += leadingZeros;        
+      }
 
-    // Return final decimal point
-    lz = len - 4;
+      // set EndOfString
+      strHLP[len] = 0;
 
-    // calculate decimal places
-    if (dp > 0){
-        // cut the too much dp's
-        len -= 3 - dp;
-    }
-    else if (dp == 0){
-        // integer
-        len = lz;
-        lz = 0;
-    }
+      return len;
+  }
 
-    // set EndOfString
-    strHLP[len] = 0;
+#else
 
-    return lz;
-}
+  char IntToStr(long val, char lz, byte dp, char lc){
+
+      // dp = decimal places
+      // lz = leading zero's
+      // lc = leading char for zero
+      // return = position of decimal point
+
+      // int (scaled by 1000)
+      ltoa(val, strHLP, 10);
+      byte len = strlen(strHLP);
+
+      if (len < 4){
+          // value is < 1 (1000)
+          memmove(&strHLP[4 - len], &strHLP[0], len);
+          memset(&strHLP[0], '0', 4 - len);
+          len = 4;
+      }
+      
+      // Set leading zero's
+      lz -= (len - 3);
+      if (lz > 0){
+          // space for missing zeros
+          memmove(&strHLP[(int)lz], &strHLP[0], len);
+          // set missing zeros
+          memset(&strHLP[0], lc, lz);
+          // correct len
+          len += lz;        
+      }
+
+      // shift dp's to set decimal point
+      memmove(&strHLP[len -2], &strHLP[len - 3], 3);
+      // set decimal point
+      strHLP[len - 3] = '.';
+      len++;
+
+      // Trailing zero's
+      lz = dp + lz - len + 2;
+      if (lz > 0){
+          // missing trailing zero's
+          memset(&strHLP[len], '0', lz);
+          len += lz;
+      }
+
+      // Return final decimal point
+      lz = len - 4;
+
+      // calculate decimal places
+      if (dp > 0){
+          // cut the too much dp's
+          len -= 3 - dp;
+      }
+      else if (dp == 0){
+          // integer
+          len = lz;
+          lz = 0;
+      }
+
+      // set EndOfString
+      strHLP[len] = 0;
+
+      return lz;
+  }
+
+#endif
+
 
 uint32_t StrToTime(char *timeIN){
     char *token;
@@ -434,25 +471,25 @@ uint32_t StrToDate(char *dateIN){
 }
 
 void DayTimeToStr(byte hour, byte minute, byte second){
-  IntToStr((long)hour * 1000, 2, 0, '0');
+  IntToStr_SMALL(hour, 2, '0');
   strcpy(strHLP2, strHLP);
   strHLP2[2] = ':';
-  IntToStr((long)minute * 1000, 2, 0, '0');
+  IntToStr_SMALL(minute, 2, '0');
   strcpy(strHLP2 + 3, strHLP);
   strHLP2[5] = ':';
-  IntToStr((long)second * 1000, 2, 0, '0');
+  IntToStr_SMALL(second, 2, '0');
   strcpy(strHLP2 + 6, strHLP);
   strHLP2[8] = 0;
 }
 
 void DateToStr(byte day, byte month, uint16_t year){
-  IntToStr((long)day * 1000, 2, 0, '0');
+  IntToStr_SMALL(day, 2, '0');
   strcpy(strHLP2, strHLP);
   strHLP2[2] = '.';
-  IntToStr((long)month * 1000, 2, 0, '0');
+  IntToStr_SMALL(month, 2, '0');
   strcpy(strHLP2 + 3, strHLP);
   strHLP2[5] = '.';
-  IntToStr((long)year * 1000, 4, 0, '0');
+  IntToStr_SMALL(year, 4, '0');
   strcpy(strHLP2 + 6, strHLP);
   strHLP2[10] = 0;
 }
@@ -489,7 +526,7 @@ void PrintSerTime(uint32_t timeIN, byte printDays){
 
   if (printDays){
     uint32_t days = timeIN / 86400UL;
-    IntToStr(days * 1000, 3, 0, ' ');
+    IntToStr_SMALL(days, 3, ' ');
     Serial.print(strHLP);
     Serial.print(F("d "));
   }

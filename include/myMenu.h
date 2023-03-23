@@ -2,8 +2,6 @@
 #include "myIIC.h"
 #include "myTime.h"
 
-#define SMALL_GetUserVal 1  // No floating-point support...
-
 
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
 uint32_t mySpeed = 9600;
@@ -498,13 +496,23 @@ byte PrintLine(byte pos, byte start, byte len){
 }
 #define PrintShortLine(pos, posX) PrintLine(pos, posX, 3)
 
-byte PrintBoldValue(long val, byte lz, byte dp, char lc){
-  EscBold(1);
-  byte r = IntToStr(val, lz, dp, lc);
-  Serial.print(strHLP);
-  EscBold(0);
-  return r;
-}
+#if SMALL_GetUserVal
+  byte PrintBoldValue(long val, byte leadingZeros, char leadingChar){
+    EscBold(1);
+    byte r = IntToStr_SMALL(val, leadingZeros, leadingChar);
+    Serial.print(strHLP);
+    EscBold(0);
+    return r;
+  }
+#else
+  byte PrintBoldValue(long val, byte lz, byte dp, char lc){
+    EscBold(1);
+    byte r = IntToStr(val, lz, dp, lc);
+    Serial.print(strHLP);
+    EscBold(0);
+    return r;
+  }
+#endif
 
 byte PrintMenuTop(char *strIN){
 
@@ -1343,7 +1351,7 @@ Start:
   EscLocate(40, pos);
   PrintMenuKeyStd('4');
   Serial.print(F("Address = "));
-  PrintBoldValue((long)myAddress * 1000, 3, 0, '0');
+  PrintBoldValue(myAddress, 3, '0');
   EscLocate(60, pos++);
   PrintMenuKeyStd('5');
   Serial.print(F("Speed = "));
