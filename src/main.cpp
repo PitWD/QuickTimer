@@ -1,6 +1,25 @@
+#include "quicklib.h"
 #include "myMenu.h"
-
 #define WIRE Wire
+
+//void myToRom();
+//void myFromRom();
+
+// global RunTime Timing
+byte myRunSec = 0;
+byte myRunMin = 0;
+byte myRunHour = 0;
+uint16_t myRunDay = 0;
+byte myRunTime = 0;
+
+// global RealTime Timing
+byte mySec = 0;
+byte myMin = 0;
+byte myHour = 0;
+byte myDay = 1;
+byte myMonth = 1;
+uint16_t myYear = 2023;
+uint32_t myTime = 0;
 
 
 void setup() {

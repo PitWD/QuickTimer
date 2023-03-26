@@ -1,22 +1,8 @@
-#include <Arduino.h>
-#include <Wire.h>
-#include <string.h>
-#include "myESC.h"
 
-#define IIC_STR_LEN 34
-#define IIC_HLP_LEN 17
-
-#define USE_ATLAS_PRTCL 0
-
-byte myAddress = 123;
+#include "quickIIC.h"
 
 // global IIC I/O buffer
 char iicStr[IIC_STR_LEN];
-char strHLP[IIC_HLP_LEN];
-char strHLP2[IIC_HLP_LEN];
-char strDefault[IIC_HLP_LEN];
-
-char ByteToChar(byte valIN);
 
 char IICgETsTRING(byte address, byte atlasValidity, byte readBin, byte readBinBytes){
 
@@ -105,11 +91,6 @@ char IICgETsTRING(byte address, byte atlasValidity, byte readBin, byte readBinBy
         return -3;
     }
 }
-#define IIcGetStr(address) IICgETsTRING(address, 0, 0, IIC_STR_LEN - 1)
-#if USE_ATLAS_PRTCL
-    #define IIcGetAtlas(address) IICgETsTRING(address, 1, 0, IIC_STR_LEN - 1)
-#endif
-#define IIcGetBytes(address, byteCnt) IICgETsTRING(address, 0, 1, byteCnt)
 
 char IICsEtSTR(byte address, char *strIN, byte term, byte setBin, byte setBinBytes){
 
@@ -140,6 +121,3 @@ char IICsEtSTR(byte address, char *strIN, byte term, byte setBin, byte setBinByt
         return -1;
     }
 }
-#define IIcSetStr(address, strIN, term) IICsEtSTR(address, strIN, term, 0 ,0)
-#define IIcSetBytes(address, strIN, byteCnt) IICsEtSTR(address, strIN, 0, 1 ,byteCnt)
-

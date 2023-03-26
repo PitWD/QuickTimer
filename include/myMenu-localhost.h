@@ -1,24 +1,22 @@
 
-#ifndef MYMENU_H
-#define MYMENU_H
+#include "myIIC.h"
+#include "myTime.h"
 
 #include "quicklib.h"
-#include <EEPROM.h>
-#include <myTime.h>
 
-// my Eeprom - Variables
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
 uint32_t mySpeed = 9600;
 byte mySolarized = 0;
-byte myAddress = 123;
+
 
 void myToRom(){
-  EEPROM.put(1000, myBoot);       // byte
-  EEPROM.put(1001, mySolarized);  // byte
-  EEPROM.put(1002, myAddress);    // byte
-  EEPROM.put(1003, mySpeed);      // 4 byte
+  EEPROM.put(1000, myBoot);
+  EEPROM.put(1001, mySolarized);
+  EEPROM.put(1002, myAddress);
+  EEPROM.put(1003, mySpeed);
   // 1007 is next...
 }
+
 void myFromRom(){
   EEPROM.get(1000, myBoot);
   EEPROM.get(1001, mySolarized);
@@ -41,6 +39,536 @@ void myFromRom(){
 
 }
 
+
+
+#if SMALL_GetUserVal
+#else
+  long StrToInt(char *strIN, byte next){
+
+      // "1.234,4.321" ==> 1234 (1st call with next = 0)
+      // "1.234,4.321" ==> 4321 (next call with next = 1)
+
+      long r = 0;
+
+      static char *nextVal = NULL;
+      static char *actVal = NULL;
+
+      long preDot = 0;
+      long afterDot = 0;
+      
+      if (next){
+          // Next Val
+          actVal = nextVal;
+      }
+      else{
+          // New Val
+          actVal = strIN;
+      }
+
+      preDot = atol(actVal) * 1000;
+
+      // decimal dot
+      char *dot = strchr(actVal, '.');
+      
+      // (probably) next number
+      nextVal = strchr(actVal, ',');
+      
+      if (dot){
+          // Floating point number
+
+          char afterDotChars[] = "000";
+          char *eofAfterDot = NULL;
+
+          if (nextVal == NULL){
+            // Next val doesn't exist
+            eofAfterDot = strchr(actVal, '\0');
+          }
+          else{
+            eofAfterDot = nextVal;
+            nextVal++;
+          }
+          
+          // count of digits after dot
+          r = (long)(nextVal - dot) - 1;
+
+          if (r > 3){
+            // too much. Max precision is 1/1000
+            r = 3;
+          }
+          memcpy(afterDotChars, dot + 1, r);
+
+          afterDot = atol(afterDotChars);
+      }
+      else{
+        // Integer number
+        if (nextVal){
+            // Valid next number - pointer on 1st char
+            nextVal++;
+        }
+      }
+      
+      if (preDot >= 0){
+          r = preDot + afterDot;
+      }
+      else{
+          r = preDot - afterDot;
+      }
+
+      return r;
+  }
+#endif
+
+void PrintErrorOK(char err, char ezo, char *strIN){
+
+  // Err: 0 = info, -1 = err, 1 = OK
+  // Err: 0 = black, -1 = red, 1 = green
+
+  byte len = strlen(strIN) + 40;
+
+  EscInverse(1);
+  EscLocate(1,24);
+
+  if (err == -1){
+    // Error
+    EscColor(bgRed);
+  }
+  else if(err == 1){
+    // OK
+    EscColor(bgGreen);
+  }
+  else{
+    // Info
+    EscBold(1);
+  }
+  
+  PrintSpaces(4);
+  //Serial.print(F("    "));
+  Serial.print(strIN);
+  EscBold(0);
+  EscColor(49);
+
+  Serial.print(F(" @ "));
+  PrintRunTime();
+
+  len = 80 - len;
+  for (int i = 0; i < len; i++){
+    Print1Space();
+  }
+  
+  PrintDateTime();
+  EscInverse(0);
+
+}
+
+byte GetUserString(char *strIN){
+  
+  // my tiny edlin...
+
+  char c = 0;
+  byte timeOut = 60;
+  byte eos = strlen(strIN);   // Position of EndOfString
+  byte pos = 0;               // Position of cursor
+  
+  byte escCnt = 0;            // hlp to interpret esc-sequences
+  char escErr = 0;            // hlp to interpret esc-sequences
+  byte escCmd = 0;
+
+  EscBold(1);
+  Serial.print(F(">> "));
+  EscBold(0);
+  EscColor(fgCyan);
+
+  if (eos){
+    pos = eos;
+    Serial.print(strIN);
+    strcpy(strHLP, strIN);
+  }
+  
+  strHLP[eos] = 0;
+
+  while (c != 13){
+
+    if (DoTimer()){
+      timeOut--;
+      if (!timeOut){
+        strcpy(strHLP, strIN);
+        EscColor(0);
+        return 0;
+      }
+    }
+
+    if (Serial.available()){
+      
+      timeOut = 60;
+
+      c = Serial.read();
+
+      switch (c){
+      case 27:
+        // Take all other chars from SerialBuffer and check on cursor movement and unsupported ESC-Sequences
+        // Single ESC is a user-esc
+        escErr = 0;
+        escCnt = 0;
+        escCmd = 0;
+        delay(12);
+        while (Serial.available()){
+          escCnt++;
+          c = Serial.read();
+          delay(12);
+          switch (escCnt){
+          case 1:
+            if (c != 91){
+              // unsupported
+              escErr = 1;
+            }
+            break;
+          case 2:
+            switch (c){
+            case 51:
+              // del
+            case 67:
+              // right
+            case 68:
+              // left
+              escCmd = c;
+              break;
+            default:
+              // unsupported
+              escErr = 1;
+              break;
+            }
+            break;
+          case 3:
+            switch (c){
+            case 126:
+              switch (escCmd){
+              case 51:
+                // del
+                break;
+              default:
+                escErr = 1;
+                break;
+              }
+              break;
+            default:
+              escErr = 1;
+              break;
+            }
+            break;
+          default:
+            // unsupported
+            escErr = 1;
+            break;
+          }
+        }
+        if (!escCnt){
+          // Single User ESC
+          // Restore text and return
+          strcpy(strHLP, strIN);
+          eos = strlen(strHLP);
+          c = 13;
+        }
+        else{
+          if (!escErr){
+            // Known Sequence
+            switch (escCmd){
+            case 67:
+              // right
+              if (pos < eos){
+                pos++;
+                EscCursorRight(1);
+              }
+              break;
+            case 68:
+              // left
+              if (pos){
+                pos--;
+                EscCursorLeft(1);
+              }
+              break;
+            case 51:
+              // del
+              if (pos < eos){
+                memmove(&strHLP[pos], &strHLP[pos + 1], eos - pos);
+                Serial.print(&strHLP[pos]);
+                Print1Space();
+                EscCursorLeft(eos - pos);
+                eos--;
+              }
+              break;
+            }
+          }
+        }
+        break;
+      case 8:
+      case 127:
+        // Back
+        if (pos && (pos == eos)){
+          // Cursor is at the end
+          eos--;
+          pos--;
+          EscCursorLeft(1);
+          Print1Space();
+          EscCursorLeft(1);
+          strHLP[eos] = 0;
+        }
+        else if (pos && (pos < eos)){
+          // Cursor is 'somewhere' - shift chars 1 to left
+          pos--;
+          memmove(&strHLP[pos], &strHLP[pos + 1], eos - pos + 2);
+          EscCursorLeft(1);
+          Serial.print(&strHLP[pos]);
+          Print1Space();
+          EscCursorLeft(eos - pos);
+          eos--;
+        }                
+        break;
+      case 10:
+      case 13:
+        break;
+      default:
+        // Print and save char
+        if (c > 31 && c < 255){
+          // Valid char
+          if (pos == IIC_HLP_LEN){
+            // MaxLen reached
+            EscCursorLeft(1);
+            pos--;
+            eos--;
+          }
+          else if (pos < eos){
+            // Cursor is 'somewhere' - shift chars 1 to right
+            memmove(&strHLP[pos + 1], &strHLP[pos], eos - pos + 1);
+            EscCursorRight(1);
+            Serial.print(&strHLP[pos + 1]);
+            EscCursorLeft(eos - pos + 1);
+          }
+          else{
+            // pos & eos at the 1st or last position of string
+            strHLP[pos + 1] = 0;
+          }        
+          Serial.print(c);
+          strHLP[pos] = c;
+          pos++;
+          eos++;
+        }        
+        break;
+      }
+    }
+  }
+
+  strHLP[eos] = 0;
+  EscColor(0);
+  return 1;
+
+}
+
+#if SMALL_GetUserVal
+  // just integer
+  long GetUserVal(long defVal){
+#else
+  // floating's, too
+  long GetUserVal(long defVal, byte type){
+#endif
+  // type:  0 = int as it is
+  //        1 = float (*1000)
+  
+  // Set strHLP2 to representation of defVal
+  #if SMALL_GetUserVal
+    // just integer
+    ltoa(defVal, strHLP2, 10);
+    if (GetUserString(strHLP2)){
+      defVal = atol(strHLP);
+    }
+  #else
+    // floating's, too
+    if (type){
+      // Is scaled float
+      IntToStr(defVal, 1, 3, ' ');
+      strcpy(strHLP2, strHLP);
+    }
+    else{
+      // Integer as it is
+      ltoa(defVal, strHLP2, 10);
+    }
+
+    if (GetUserString(strHLP2)){
+      if (type){
+        // Is scaled float
+        strcpy(strHLP2, strHLP);
+        defVal = StrToInt(strHLP2, 0);
+      }
+      else{
+        // Integer as it is
+        defVal = atol(strHLP);
+      }
+    }
+  #endif
+  return defVal;  
+}
+
+uint32_t GetUserTime(uint32_t timeIN){
+  SerialDayTimeToStr(timeIN);
+  GetUserString(strHLP2);
+  return StrToTime(strHLP);
+}
+
+uint32_t GetUserDate(uint32_t timeIN){
+  SerialDateToStr(timeIN);
+  GetUserString(strHLP2);
+  return StrToDate(strHLP);
+}
+
+char GetUserKey(byte maxChar, byte noCnt){
+
+  // noCnt = 0    No Numbers
+  // noCnt = n     1-9
+  
+  byte timeOut = 60;
+  char charIN = 0;
+  char r = -1;         // TimeOut
+
+  while (timeOut){
+
+    if (DoTimer()){
+      // A Second is over...
+      timeOut--;
+    }
+    if (Serial.available()){
+      charIN = Serial.read();
+      timeOut = 0;
+      r = charIN;
+      if (charIN > 47 && charIN - 48 <= noCnt){
+        // Valid Number selected
+      }
+      else if (charIN > 96 && charIN < maxChar + 1){
+        // Valid Letter selected
+      }
+      else if (charIN == 13){
+        // Enter - Exit - Back
+        r = 0;
+      }
+      else{
+        // Refresh
+        r = -1;
+      }
+      if (r < 0){
+        timeOut = 60;
+      }
+    } 
+  }
+
+  return r;
+
+}
+
+byte PrintLine(byte pos, byte start, byte len){
+  if (pos && start){
+    EscLocate(start, pos++);
+  }
+  PrintCharsCnt('-', len);
+  
+  return pos;
+}
+#define PrintShortLine(pos, posX) PrintLine(pos, posX, 3)
+
+#if SMALL_GetUserVal
+  byte PrintBoldValue(long val, byte leadingZeros, char leadingChar){
+    EscBold(1);
+    byte r = IntToStr_SMALL(val, leadingZeros, leadingChar);
+    Serial.print(strHLP);
+    EscBold(0);
+    return r;
+  }
+#else
+  byte PrintBoldValue(long val, byte lz, byte dp, char lc){
+    EscBold(1);
+    byte r = IntToStr(val, lz, dp, lc);
+    Serial.print(strHLP);
+    EscBold(0);
+    return r;
+  }
+#endif
+
+byte PrintMenuTop(char *strIN){
+
+  byte spaces = 80 - strlen(strIN);
+  byte frontSpaces = spaces / 2;
+  spaces -= frontSpaces;
+
+  EscCls();
+  EscCursorVisible(1);
+  EscInverse(1);
+  EscLocate(1, 1);
+  EscBold(1);
+  PrintSpaces(frontSpaces);
+  Serial.print(strIN);
+  PrintSpaces(spaces);
+  EscBold(0);
+  EscInverse(0);
+  return 2;
+
+}
+
+void PrintMenuEnd(byte pos){
+  Serial.println(F("\n"));
+  Serial.print(F("    Select key, or Enter(for return)..."));
+}
+
+void PrintSpacer(byte bold){
+  EscBold(0);
+  Serial.print(F(" | "));
+  if (bold){
+    EscBold(1);
+  }
+}
+
+void PrintMenuKey(char key, byte space, char leadChar, char trailChar, byte colon, byte bold, byte faint){
+  // "space" is a leading space - (as very 1st print)
+  // "key" is all time bold and underlined followed by a ')'
+  // "leadChar" (bold and underlined, too) is an option
+  // "colon" ': ' (not bold, nor underlined) is an option
+  // "bold" sets/keeps bold on exit
+
+  if (space){
+    Print1Space();
+  }
+  EscBold(1);
+  EscUnder(1);
+  if (leadChar){
+    Serial.print(leadChar);
+  }
+  Serial.print(key);
+  Serial.print(F(")"));
+  EscBold(0);
+  EscUnder(0);
+  if (colon){
+    Serial.print(F(": "));
+  }
+  if (trailChar){
+    Serial.print(trailChar);
+  }
+  if (bold){
+    EscBold(1);
+  }
+  else if (faint){
+    EscFaint(1);
+  }
+  
+}
+void PrintMenuKeyStd(char key){
+  PrintMenuKey(key, 0, 0, 0, 1, 0, 0);
+}
+void PrintMenuNo(char number){
+  PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
+}
+
+void PrintOFF(void){
+  Serial.print(F("OFF"));
+}
+void PrintON(void){
+  Serial.print(F(" ON"));
+}
 void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte printType){
 
   // "timerID"      - the timer-id
@@ -716,7 +1244,7 @@ void PrintLoopMenu(){
 
   byte r = 1;
   byte pos = PrintMenuTop((char*)"- QuickTimer 1.03 -");
-
+  EscCursorVisible(0);
   pos += 2;
 
   pos = PrintLine(pos, 5, 71);
@@ -854,7 +1382,7 @@ Start:
     break;
   case '4':
     // Set Address
-    myAddress = GetUserInt(myAddress);
+    myAddress = GetUserVal(myAddress);
     if (!myAddress || myAddress > 254){
       // illegal address - reload from eeprom
       myFromRom();
@@ -866,7 +1394,7 @@ Start:
     break;
   case '5':
     // Set Speed
-    mySpeed = GetUserInt(mySpeed);
+    mySpeed = GetUserVal(mySpeed);
     if (IsSerialSpeedValid(mySpeed)){ 
       // valid - save to eeprom
       myToRom();
@@ -911,5 +1439,3 @@ Start:
   PrintLoopMenu();
 }
 
-
-#endif
