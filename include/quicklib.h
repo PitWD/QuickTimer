@@ -1,13 +1,6 @@
 #ifndef QUICKLIB_H
 #define QUICKLIB_H
 
-#include <Arduino.h>
-#include <Wire.h>
-#include "quickESC.h"
-#include "quickTIME.h"
-#include "quickIIC.h"
-#include "quickPRINT.h"
-
 // True = No floating-point support...
 #define SMALL_GetUserVal 1  
 
@@ -15,6 +8,14 @@
 #define IIC_STR_LEN 34
 #define STR_HLP_LEN 17
 #define USE_ATLAS_PRTCL 0
+
+
+#include <Arduino.h>
+#include <Wire.h>
+#include "quickESC.h"
+#include "quickTIME.h"
+#include "quickIIC.h"
+#include "quickPRINT.h"
 
 // Seconds between RTC sync's (0 disables sync
 #define syncRTCinterval 86400L
@@ -31,9 +32,9 @@ byte IsSerialSpeedValid(uint32_t speed);
   byte IntToStr_SMALL(long val, char cntLeadingChar, char leadingChar);
   #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_SMALL(val, cntLeadingChar, leadingChar)
 #else
-  char IntToStr_BIG(long val, char lz, byte dp, char lc);
+  byte IntToStr_BIG(long val, char lz, byte dp, char lc);
   #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_BIG(val * 1000, cntLeadingChar, 0, leadingChar)
-  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG(val, cntLeadingChar, 0, leadingChar)
+  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG(val, cntLeadingChar, cntDecimalPlaces, leadingChar)
 #endif
 
 byte getBit(byte byteIN, byte bitToGet);
@@ -49,7 +50,9 @@ byte setBit(byte byteIN, byte bitToSet, byte setTo);
 #endif      
 #if SMALL_GetUserVal
 #else
-  long StrToInt(char *strIN, byte next);
+  //long StrToInt(char *strIN, byte next);
+  long StrTokFloatIntToInt(char *strIN);
+  long StrFloatIntToInt(char *strIN);
 #endif
 
 byte GetUserString(char *strIN);

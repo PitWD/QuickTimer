@@ -110,7 +110,7 @@ byte IsSerialSpeedValid(uint32_t speed){
   }
 
   #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_BIG(val * 1000, cntLeadingChar, 0, leadingChar)
-  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG(val, cntLeadingChar, 0, leadingChar)
+  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG(val, cntLeadingChar, cntDecimalPlaces, leadingChar)
 
 #endif
 
@@ -158,7 +158,7 @@ char ByteToChar(byte valIN){
         //        1 = float (*1000)
         if (type){
             // Is scaled float
-            IntToStr(defVal, 1, 3, ' ');
+            IntToFloatStr(defVal, 1, 3, ' ');
             strcpy(strHLP2, strHLP);
         }
         else{
@@ -167,15 +167,7 @@ char ByteToChar(byte valIN){
         }
 
         if (GetUserString(strHLP2)){
-            if (type){
-                // Is scaled float
-                strcpy(strHLP2, strHLP);
-                defVal = StrToInt(strHLP2, 0);
-            }
-            else{
-                // Integer as it is
-                defVal = atol(strHLP);
-            }
+          defVal = StrFloatIntToInt(strHLP2);
         }
         return defVal;  
     }
@@ -184,6 +176,80 @@ char ByteToChar(byte valIN){
 // StrToInt (Float - GetUserVal)
 #if SMALL_GetUserVal
 #else
+long StrFloatIntToInt(char *strIN) {
+    
+    // Returns 123456 for "123.45678"   (floats get scaled by 1000)
+    // Returns 12345678 for "12345678"  (integers are untouched)
+
+    // find the decimal point
+    char *decimal = strchr(strIN, '.');
+    if (decimal == NULL) {
+        // no decimal point, so it's an integer value
+        return strtol(strIN, NULL, 10);
+    }
+    else {
+        // convert floating value to scaled integer
+        
+        // set terminator on decimal point
+        *decimal = '\0';
+        long value = strtol(strIN, NULL, 10) * 1000;
+    
+        byte isNegative = 0;
+        // Check if negative
+        if (value < 0){
+            value *= -1;
+            isNegative = 1;
+        }
+        
+        // move pointer on 1st decimal place
+        decimal++;
+        int factor = 100;
+        while (*decimal != '\0' && factor > 0) {
+            if (isdigit(*decimal)) {
+                value += (*decimal - '0') * factor;
+                factor /= 10;
+            }
+            decimal++;
+        }
+        if (isNegative){
+            value *= -1;
+        }
+        
+        return value;
+    }
+}
+
+long StrTokFloatIntToInt(char *strIN){
+    
+    // extended strtok()
+    // abc,123.456,xyz,789  1st call gets 123.456 and returns 123456 (floats get scaled by 1000)
+    //                      next call gets 789 and returns 789 (integers are unscaled)
+
+    static char *nextToken = NULL;  // Pointer on nextToken
+    char *token;
+
+    if (strIN != NULL) {
+        // New string with value(s)
+        nextToken = strIN;
+    }
+    byte firstVal = 1;
+
+    while ((token = strtok(nextToken, ",")) != NULL) {
+        // reset nextToken for subsequent calls to strtok()
+        nextToken = NULL;  
+
+        // check if token is a number
+        if (isdigit(*token) || *token == '-') {            
+            return StrFloatIntToInt(token);
+        }
+    }
+
+    // no more tokens
+    return 0;
+}
+
+
+  /*
   long StrToInt(char *strIN, byte next){
 
       // "1.234,4.321" ==> 1234 (1st call with next = 0)
@@ -257,6 +323,7 @@ char ByteToChar(byte valIN){
 
       return r;
   }
+  */
 #endif
 
 byte GetUserString(char *strIN){

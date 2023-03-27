@@ -17,7 +17,14 @@ void Print1Space(void);
 byte PrintLine(byte pos, byte start, byte len);
 #define PrintShortLine(posY, posX) PrintLine(posY, posX, 3)
 
-byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar);
+#if SMALL_GetUserVal
+    byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar);
+    #define PrintBoldInt(val, cntLeadingZeros, leadingChar) PrintBoldValue(val, cntLeadingZeros, leadingChar)
+#else
+    byte PrintBoldValue(long val, byte cntLeadingZeros, byte cntDecimalPlaces, char leadingChar);
+    #define PrintBoldInt(val, cntLeadingZeros, leadingChar) PrintBoldValue(val, cntLeadingZeros, 0, leadingChar)
+    #define PrintBoldFloat(val, cntLeadingZeros, cntDecimalPlaces, leadingChar) PrintBoldValue(val, cntLeadingZeros, cntDecimalPlaces, leadingChar)
+#endif
 
 void PrintErrorOK(char err, char ezo, char *strIN);
 byte PrintMenuTop(char *strIN);

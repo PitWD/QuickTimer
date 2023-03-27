@@ -60,13 +60,39 @@ byte PrintLine(byte posY, byte posX, byte len){
   return posY;
 }
 
-byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar){
-  EscBold(1);
-  byte r = IntToIntStr(val, cntLeadingZeros, leadingChar);
-  Serial.print(strHLP);
-  EscBold(0);
-  return r;
-}
+#if SMALL_GetUserVal
+  byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar){
+    
+    EscBold(1);
+    
+    byte r = IntToIntStr(val, cntLeadingZeros, leadingChar);
+
+    Serial.print(strHLP);
+    EscBold(0);
+
+    return r;
+  }
+#else
+  byte PrintBoldValue(long val, byte cntLeadingZeros, byte cntDecimalPlaces, char leadingChar){
+    
+    byte r = 0;
+    
+    EscBold(1);
+    
+    if (cntDecimalPlaces){
+      r = IntToFloatStr(val, cntLeadingZeros, cntDecimalPlaces, leadingChar);
+    }
+    else{
+      r = IntToIntStr(val, cntLeadingZeros, leadingChar);
+    }
+
+    Serial.print(strHLP);
+    EscBold(0);
+
+    return r;
+  }
+#endif
+
 
 void PrintErrorOK(char err, char ezo, char *strIN){
 
