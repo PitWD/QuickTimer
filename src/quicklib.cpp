@@ -153,7 +153,7 @@ char ByteToChar(byte valIN){
     }
   #else
     // floating's, too
-    long GetUserVal(long defVal, byte type){
+    long GetUserVal(long defVal, uint8_t type){
         // type:  0 = int as it is
         //        1 = float (*1000)
         if (type){
@@ -167,7 +167,12 @@ char ByteToChar(byte valIN){
         }
 
         if (GetUserString(strHLP2)){
-          defVal = StrFloatIntToInt(strHLP2);
+          // convert type into right value for StrFloatIntToInt
+          if (type){
+            type = -1;
+          }
+          
+          defVal = StrFloatIntToInt(strHLP2, type);
         }
         return defVal;  
     }
@@ -176,23 +181,34 @@ char ByteToChar(byte valIN){
 // StrToInt (Float - GetUserVal)
 #if SMALL_GetUserVal
 #else
-long StrFloatIntToInt(char *strIN) {
+long StrFloatIntToInt(char *strIN, int8_t autoScale) {
     
-    // Returns 123456 for "123.45678"   (floats get scaled by 1000)
-    // Returns 12345678 for "12345678"  (integers are untouched)
+    // With positive autoscale:
+      // Returns 123456 for "123.45678"   (floats get scaled by 1000)
+      // Returns 12345678 for "12345678"  (integers are untouched)
+    // With negative autoscale:
+      // All scaled by 1000
+    // Without autoscale:
+      // All unscaled integer
+
+    long value = 0;
 
     // find the decimal point
     char *decimal = strchr(strIN, '.');
-    if (decimal == NULL) {
+    if ((decimal == NULL) || !autoScale) {
         // no decimal point, so it's an integer value
-        return strtol(strIN, NULL, 10);
+        value = strtol(strIN, NULL, 10);
+        if (autoScale < 0){
+          // all scaled by 1000
+          value *= 1000;
+        }
     }
     else {
         // convert floating value to scaled integer
         
         // set terminator on decimal point
         *decimal = '\0';
-        long value = strtol(strIN, NULL, 10) * 1000;
+        value = strtol(strIN, NULL, 10) * 1000;
     
         byte isNegative = 0;
         // Check if negative
@@ -213,13 +229,12 @@ long StrFloatIntToInt(char *strIN) {
         }
         if (isNegative){
             value *= -1;
-        }
-        
-        return value;
+        }        
     }
+    return value;
 }
 
-long StrTokFloatIntToInt(char *strIN){
+long StrTokFloatIntToInt(char *strIN, int8_t autoScale){
     
     // extended strtok()
     // abc,123.456,xyz,789  1st call gets 123.456 and returns 123456 (floats get scaled by 1000)
@@ -240,7 +255,7 @@ long StrTokFloatIntToInt(char *strIN){
 
         // check if token is a number
         if (isdigit(*token) || *token == '-') {            
-            return StrFloatIntToInt(token);
+            return StrFloatIntToInt(token, autoScale);
         }
     }
 

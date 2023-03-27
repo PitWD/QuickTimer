@@ -51,8 +51,12 @@ byte setBit(byte byteIN, byte bitToSet, byte setTo);
 #if SMALL_GetUserVal
 #else
   //long StrToInt(char *strIN, byte next);
-  long StrTokFloatIntToInt(char *strIN);
-  long StrFloatIntToInt(char *strIN);
+  long StrTokFloatIntToInt(char *strIN, int8_t autoScale);
+  #define StrTokFloatToInt(strIN) StrTokFloatIntToInt(strIN, -1)
+  #define StrTokIntToInt(strIN) StrTokFloatIntToInt(strIN, 0)
+  long StrFloatIntToInt(char *strIN, int8_t autoScale);
+  #define StrFloatToInt(strIN) StrFloatIntToInt(strIN, -1)
+  #define StrIntToInt(strIN) StrFloatIntToInt(strIN, 0)
 #endif
 
 byte GetUserString(char *strIN);

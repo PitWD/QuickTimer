@@ -3,7 +3,11 @@
 // ESC / Terminal hacks
 byte escFaintDeleteColor = 39;
 char escFaintIsActive = 0;
-byte fgFaint = 90;
+#if ESC_SOLARIZED
+  byte fgFaint = 92;
+#else
+  byte fgFaint = 90;
+#endif
 
 void EscItalic(byte set) {
 	if (set) {
