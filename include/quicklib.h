@@ -24,6 +24,17 @@
 #define ESC_CAN_FAINT 0
 #define ESC_SOLARIZED 1
 
+// Access PROGMEM variables like F() for Serial.print
+// array of strings (char[][])
+#define Fa(var) strcpy_P(strHLP, (PGM_P)pgm_read_word(&(var)))
+// single string (char[])
+#define Fc(var) (__FlashStringHelper*)(var)
+// byte[]
+#define Fb(var) (byte)pgm_read_byte(&(var))
+// int[]
+#define Fi(var) (int)pgm_read_word(&(var))
+
+
 // Declarations Declarations Declarations Declarations Declarations Declarations Declarations Declarations
 
 byte IsSerialSpeedValid(uint32_t speed);
