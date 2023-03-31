@@ -43,9 +43,9 @@ byte IsSerialSpeedValid(uint32_t speed);
   byte IntToStr_SMALL(long val, char cntLeadingChar, char leadingChar);
   #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_SMALL(val, cntLeadingChar, leadingChar)
 #else
-  byte IntToStr_BIG(long val, char lz, byte dp, char lc);
-  #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_BIG(val * 1000, cntLeadingChar, 0, leadingChar)
-  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG(val, cntLeadingChar, cntDecimalPlaces, leadingChar)
+  byte IntToStr_BIG(long val, int8_t lz, byte dp, char lc);
+  #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_BIG((long)((long)(val) * 1000), (uint8_t)(cntLeadingChar), 0, (char)(leadingChar))
+  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG((long)(val), (uint8_t)(cntLeadingChar), (byte)(cntDecimalPlaces), (char)(leadingChar))
 #endif
 
 byte getBit(byte byteIN, byte bitToGet);
@@ -55,7 +55,7 @@ byte setBit(byte byteIN, byte bitToSet, byte setTo);
     // just integer
     long GetUserInt(long valIN);
 #else
-    long GetUserVal(long defVal, byte type);
+    long GetUserVal(long defVal, int8_t type);
     #define GetUserInt(valIN) GetUserVal(valIN, 0)
     #define GetUserFloat(valIN) GetUserVal(valIN, 1)
 #endif      
@@ -92,6 +92,7 @@ extern char iicStr[IIC_STR_LEN];
 extern char strHLP[STR_HLP_LEN];
 extern char strHLP2[STR_HLP_LEN];
 extern char strDefault[STR_HLP_LEN];
+extern byte adrDefault;
 
 // ModBusAddress
 extern byte myAddress;

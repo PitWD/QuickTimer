@@ -878,19 +878,18 @@ Start:
     break;    
   case '6':
     // Boot Terminal
+    myBoot = 0;
+    myToRom();
     break;
   case '7':
     // Boot Slave
+    myBoot = 1;
+    myToRom();
     break;
   case '8':
     // Use Solarized Color-Hack
     mySolarized = !mySolarized;
-    if (mySolarized){
-      fgFaint = 92;
-    }
-    else{
-      fgFaint = 90;
-    }
+    fgFaint = 90 + (mySolarized * 2);
     // Save to eeprom
     myToRom();
     break;

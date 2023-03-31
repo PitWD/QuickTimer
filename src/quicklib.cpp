@@ -6,6 +6,7 @@ long myRtcTemp = 0;
 char strHLP[STR_HLP_LEN];
 char strHLP2[STR_HLP_LEN];
 char strDefault[STR_HLP_LEN];
+byte adrDefault;
 
 // Check if 'speed' is a multiple of 1200
 byte IsSerialSpeedValid(uint32_t speed){
@@ -46,10 +47,10 @@ byte IsSerialSpeedValid(uint32_t speed){
 
 #else
 
-  byte IntToStr_BIG(long val, char lz, byte dp, char lc){
+  byte IntToStr_BIG(long val, int8_t lz, byte dp, char lc){
 
       // dp = decimal places
-      // lz = leading zero's
+      // lz = leading zero's !!! CAN GO NEGATIVE !!!
       // lc = leading char for zero
       // return = position of decimal point
 
@@ -109,9 +110,6 @@ byte IsSerialSpeedValid(uint32_t speed){
       return lz;
   }
 
-  #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_BIG(val * 1000, cntLeadingChar, 0, leadingChar)
-  #define IntToFloatStr(val, cntLeadingChar, cntDecimalPlaces, leadingChar) IntToStr_BIG(val, cntLeadingChar, cntDecimalPlaces, leadingChar)
-
 #endif
 
 byte getBit(byte byteIN, byte bitToGet) {
@@ -153,7 +151,7 @@ char ByteToChar(byte valIN){
     }
   #else
     // floating's, too
-    long GetUserVal(long defVal, uint8_t type){
+    long GetUserVal(long defVal, int8_t type){
         // type:  0 = int as it is
         //        1 = float (*1000)
         if (type){
@@ -171,8 +169,7 @@ char ByteToChar(byte valIN){
           if (type){
             type = -1;
           }
-          
-          defVal = StrFloatIntToInt(strHLP2, type);
+          defVal = StrFloatIntToInt(strHLP, type);
         }
         return defVal;  
     }
@@ -562,7 +559,7 @@ char GetUserKey(byte maxChar, byte noCnt){
   
   byte timeOut = 60;
   char charIN = 0;
-  char r = -1;         // TimeOut
+  int8_t r = -1;         // TimeOut
 
   while (timeOut){
 

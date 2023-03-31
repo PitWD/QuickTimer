@@ -2,7 +2,8 @@
 
 // ESC / Terminal hacks
 byte escFaintDeleteColor = 39;
-char escFaintIsActive = 0;
+int8_t escFaintIsActive = 0;
+
 #if ESC_SOLARIZED
   byte fgFaint = 92;
 #else
