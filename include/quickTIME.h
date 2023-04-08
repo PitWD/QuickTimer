@@ -30,7 +30,7 @@ void DayTimeDateToStr(byte hourDay, byte minuteMonth, uint16_t secondYear, char 
   extern byte myRunMin;
   extern byte myRunHour;
   extern uint16_t myRunDay;
-  extern byte myRunTime;
+  extern uint32_t myRunTime;
 
 // global RealTime Timing
   extern byte mySec;

@@ -575,7 +575,10 @@ char GetUserKey(byte maxChar, byte noCnt){
         // Valid Number selected
       }
       else if (charIN > 96 && charIN < maxChar + 1){
-        // Valid Letter selected
+        // Valid small Letter selected
+      }
+      else if (charIN > 64 && charIN < maxChar - 31){
+        // Valid BIG Letter selected
       }
       else if (charIN == 13){
         // Enter - Exit - Back
@@ -595,3 +598,10 @@ char GetUserKey(byte maxChar, byte noCnt){
 
 }
 
+/*
+char *Fa(PGM_P strIN){
+  //return strcpy_P(buf, (PGM_P)pgm_read_word(&(strIN)));
+  static char buf[STR_HLP_LEN];
+  return strcpy_P(buf, (PGM_P)strIN);
+}
+*/

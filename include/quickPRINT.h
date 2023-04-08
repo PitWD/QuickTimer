@@ -21,12 +21,15 @@ byte PrintLine(byte pos, byte start, byte len);
     byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar);
     #define PrintBoldInt(val, cntLeadingZeros, leadingChar) PrintBoldValue(val, cntLeadingZeros, leadingChar)
 #else
-    byte PrintBoldValue(long val, byte cntLeadingZeros, byte cntDecimalPlaces, char leadingChar);
-    #define PrintBoldInt(val, cntLeadingZeros, leadingChar) PrintBoldValue(val, cntLeadingZeros, 0, leadingChar)
-    #define PrintBoldFloat(val, cntLeadingZeros, cntDecimalPlaces, leadingChar) PrintBoldValue(val, cntLeadingZeros, cntDecimalPlaces, leadingChar)
+    byte PrintValue(long val, byte cntLeadingZeros, byte cntDecimalPlaces, char leadingChar, byte bold);
+    #define PrintBoldInt(val, cntLeadingZeros, leadingChar) PrintValue(val, cntLeadingZeros, 0, leadingChar, 1)
+    #define PrintInt(val, cntLeadingZeros, leadingChar) PrintValue(val, cntLeadingZeros, 0, leadingChar, 0)
+    #define PrintBoldFloat(val, cntLeadingZeros, cntDecimalPlaces, leadingChar) PrintValue(val, cntLeadingZeros, cntDecimalPlaces, leadingChar, 1)
+    #define PrintFloat(val, cntLeadingZeros, cntDecimalPlaces, leadingChar) PrintValue(val, cntLeadingZeros, cntDecimalPlaces, leadingChar, 0)
 #endif
 
 void PrintErrorOK(char err, char ezo, char *strIN);
+void PrintCentered(char *strIN, byte centerLen);
 byte PrintMenuTop(char *strIN);
 void PrintMenuEnd(byte pos);
 

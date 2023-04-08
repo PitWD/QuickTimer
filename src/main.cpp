@@ -10,7 +10,7 @@ byte myRunSec = 0;
 byte myRunMin = 0;
 byte myRunHour = 0;
 uint16_t myRunDay = 0;
-byte myRunTime = 0;
+uint32_t myRunTime = 0;
 
 // global RealTime Timing
 byte mySec = 0;

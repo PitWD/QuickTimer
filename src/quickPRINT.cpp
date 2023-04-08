@@ -73,11 +73,12 @@ byte PrintLine(byte posY, byte posX, byte len){
     return r;
   }
 #else
-  byte PrintBoldValue(long val, byte cntLeadingZeros, byte cntDecimalPlaces, char leadingChar){
+
+  byte PrintValue(long val, byte cntLeadingZeros, byte cntDecimalPlaces, char leadingChar, byte bold){
     
     byte r = 0;
     
-    EscBold(1);
+    EscBold(bold);
     
     if (cntDecimalPlaces){
       r = IntToFloatStr(val, cntLeadingZeros, cntDecimalPlaces, leadingChar);
@@ -91,6 +92,7 @@ byte PrintLine(byte posY, byte posX, byte len){
 
     return r;
   }
+
 #endif
 
 
@@ -137,19 +139,23 @@ void PrintErrorOK(char err, char ezo, char *strIN){
   EscInverse(0);
 
 }
-byte PrintMenuTop(char *strIN){
 
-  byte spaces = 80 - strlen(strIN);
+void PrintCentered(char *strIN, byte centerLen){
+  byte spaces = centerLen - strlen(strIN);
   byte frontSpaces = spaces / 2;
   spaces -= frontSpaces;
+  PrintSpaces(frontSpaces);
+  Serial.print(strIN);
+  PrintSpaces(spaces);
+}
+
+byte PrintMenuTop(char *strIN){
 
   EscCls();
   EscInverse(1);
   EscLocate(1, 1);
   EscBold(1);
-  PrintSpaces(frontSpaces);
-  Serial.print(strIN);
-  PrintSpaces(spaces);
+  PrintCentered(strIN, 80);
   EscBold(0);
   EscInverse(0);
   return 2;
