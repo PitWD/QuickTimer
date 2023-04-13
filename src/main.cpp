@@ -78,11 +78,16 @@ void loop() {
 
   byte r = 1;
   byte pos = 3;
+  
+  // Seems, that I messed up runningState[n].state.hasChanged
+  // while implementing right Back 'n' Preview times vor multi-interval...
+  // firstRun is a temporary (if fix on the right place would be mor expensive)
+  static byte firstRun = 1;
 
   if (DoTimer()){
     // A Second is over...
 
-    if (RunTimers()){
+    if (RunTimers() || firstRun){
       // A Port has changed
       pos = 5;
       for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
@@ -103,7 +108,7 @@ void loop() {
         }
         if (r){
           // Port is valid
-          if (runningState[i].state.hasChanged){
+          if (runningState[i].state.hasChanged || firstRun){
             // And has changed
             TimerFromRomRam(i, 1);
             PrintTimerLine1(i, 9, pos, 0, 2);
@@ -127,6 +132,7 @@ void loop() {
     //EscColor(0);
     EscInverse(0);    
     
+    firstRun = 0;
   }
 
   if (Serial.available()){
