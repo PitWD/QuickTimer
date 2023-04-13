@@ -715,7 +715,7 @@ Start:
 void PrintLoopMenu(){
 
   byte r = 1;
-  byte pos = PrintMenuTop((char*)"- QuickTimer 1.03 -");
+  byte pos = PrintMenuTop((char*)"- QuickTimer 1.04 -");
 
   pos += 2;
 
@@ -761,7 +761,7 @@ Start:
   // To see right Last/Next after StartUp und changes...
   RunTimers();
 
-  char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.03 -");
+  char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.04 -");
   
   uint32_t hlpDate = 0;
   uint32_t hlpTime = 0;
