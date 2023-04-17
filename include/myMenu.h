@@ -98,7 +98,7 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
   }
   else if (printType == 2){
     // Print Time
-    PrintSerTime(myTime, 0);
+    PrintSerTime(myTime, 0, 1);
   }
   else{
     // Print Nothing
@@ -195,7 +195,7 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
     // Temporary On/Off
     PrintSpaces(5);
     //Serial.print(F("     "));
-    PrintSerTime(runningState[timerID].tempUntil,0);
+    PrintSerTime(runningState[timerID].tempUntil, 0, 1);
     PrintSpaces(6);
     //Serial.print(F("      "));
     PrintSpacer(0);
@@ -205,7 +205,7 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
     if (runningTimer.state.lastVal){
       // On since -> until
       EscColor(fgGreen);
-      PrintSerTime(runningState[timerID].lastAction, 0);
+      PrintSerTime(runningState[timerID].lastAction, 0, 1);
       EscColor(39);
       Serial.print(F(" - "));
       EscColor(fgRed);
@@ -213,12 +213,12 @@ void PrintTimerLine1(byte timerID, byte posX, byte posY, byte printName, byte pr
     else{
       // Off since -> until
       EscColor(fgRed);
-      PrintSerTime(runningState[timerID].lastAction, 0);
+      PrintSerTime(runningState[timerID].lastAction, 0, 1);
       EscColor(39);
       Serial.print(F(" - "));
       EscColor(fgGreen);
     }
-    PrintSerTime(runningState[timerID].nextAction, 0);
+    PrintSerTime(runningState[timerID].nextAction, 0, 1);
     EscColor(39);
     PrintSpacer(0);
   }
@@ -300,17 +300,17 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     PrintSpacer(0);
     if (runningTimer.type.dayTimer){
       // !! 24h Day Timer !!
-      PrintSerTime(runningTimer.offset[0], 0);
+      PrintSerTime(runningTimer.offset[0], 0, 1);
     }
     else{
-      PrintSerTime(runningTimer.onTime[0], 0);
+      PrintSerTime(runningTimer.onTime[0], 0, 1);
     }
     
     PrintMenuNo('1');
     PrintSpacer(0);
     if (runningTimer.type.whileON){
       // whileON
-      PrintSerTime(runningTimer.onTime[1], 0);
+      PrintSerTime(runningTimer.onTime[1], 0, 1);
       PrintMenuNo('4');
       PrintSpacer(0);
     }
@@ -321,7 +321,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     }  
     if (runningTimer.type.whileOFF){
       // whileOFF
-      PrintSerTime(runningTimer.onTime[2], 0);
+      PrintSerTime(runningTimer.onTime[2], 0, 1);
       PrintMenuNo('7');
       PrintSpacer(0);
     }
@@ -336,17 +336,17 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     Serial.print(F(":"));
     PrintSpacer(0);
     if (runningTimer.type.dayTimer){
-      PrintSerTime(runningTimer.realOffTime, 0);
+      PrintSerTime(runningTimer.realOffTime, 0, 1);
     }
     else{
-      PrintSerTime(runningTimer.offTime[0], 0);
+      PrintSerTime(runningTimer.offTime[0], 0, 1);
     }
         
     PrintMenuNo('2');
     PrintSpacer(0);
     if (runningTimer.type.whileON){
       // whileON
-      PrintSerTime(runningTimer.offTime[1], 0);
+      PrintSerTime(runningTimer.offTime[1], 0, 1);
       PrintMenuNo('5');
       PrintSpacer(0);
     }
@@ -357,7 +357,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     }  
     if (runningTimer.type.whileOFF){
       // triple
-      PrintSerTime(runningTimer.offTime[2], 0);
+      PrintSerTime(runningTimer.offTime[2], 0, 1);
       PrintMenuNo('8');
       PrintSpacer(0);
     }
@@ -375,14 +375,14 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
       PrintTimerTableNA();
     }
     else{
-      PrintSerTime(runningTimer.offset[0], 0);
+      PrintSerTime(runningTimer.offset[0], 0, 1);
       PrintMenuNo('3');
     }
     PrintSpacer(0);
     r2++; // += 2;
     if (runningTimer.type.whileON){
       // whileON
-      PrintSerTime(runningTimer.offset[1], 0);
+      PrintSerTime(runningTimer.offset[1], 0, 1);
       PrintMenuNo('6');
       PrintSpacer(0);  
   }
@@ -393,7 +393,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     }
     if (runningTimer.type.whileOFF){
       // whileOFF
-      PrintSerTime(runningTimer.offset[2], 0);
+      PrintSerTime(runningTimer.offset[2], 0, 1);
       PrintMenuNo('9');
       PrintSpacer(0);
     }
@@ -497,7 +497,7 @@ Start:
   PrintMenuKeyStd('T');
   Serial.print(F("SetTempTime: "));
   EscBold(1);
-  PrintSerTime(tempTime, 0);
+  PrintSerTime(tempTime, 0, 1);
   EscBold(0);
 
   PrintLine(pos++, 4, 75);
@@ -746,7 +746,7 @@ void PrintLoopMenu(){
     r = 1;
   }
   
-  PrintErrorOK(0, -1 ,(char*)"Loop started...");
+  PrintErrorOK(0, 0 ,(char*)"Loop started...");
 
   EscBold(1);
   pos = PrintLine(pos, 5, 71);

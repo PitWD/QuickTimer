@@ -11,18 +11,27 @@ void PrintHlpDate(byte dayIN, byte monthIN, uint16_t yearIN){
     Serial.print(strHLP2);
 }
 
-void PrintSerTime(uint32_t timeIN, byte printDays){
+void PrintSerTime(uint32_t timeIN, byte printDays, byte print){
   // if "printDays" is set, '000d 00:00:00'
   // else         '00:00:00'
 
+  SerialDayTimeToStr(timeIN);           // strHLP2 contains 00:00:00 - strHLP was used....
+
   if (printDays){
     uint32_t days = timeIN / 86400UL;
-    IntToIntStr(days, 3, ' ');
-    Serial.print(strHLP);
-    Serial.print(F("d "));
+    IntToIntStr(days, 3, ' ');          // strHLP contains 000
+    memmove(&strHLP2[5], strHLP2, 9);   // make space for "000d "
+    memcpy(strHLP2, strHLP, 3);
+    strHLP2[3] = 'd';
+    strHLP2[4] = ' ';
+    // Serial.print(strHLP);
+    // Serial.print(F("d "));
   }
-  SerialDayTimeToStr(timeIN);
-  Serial.print(strHLP2);
+  
+  if (print){
+    Serial.print(strHLP2);
+  }
+  
 }
 
 void PrintTime(){
@@ -30,7 +39,7 @@ void PrintTime(){
 }
 
 void PrintRunTime(){
-    PrintSerTime(myRunTime, 1);
+    PrintSerTime(myRunTime, 1, 1);
 }
 
 void PrintDateTime(){
@@ -96,7 +105,7 @@ byte PrintLine(byte posY, byte posX, byte len){
 #endif
 
 
-void PrintErrorOK(char err, char ezo, char *strIN){
+void PrintErrorOK(int8_t err, byte len, char *strIN){
 
    // !! Bottom-Line of TUI !!
 
@@ -130,13 +139,24 @@ void PrintErrorOK(char err, char ezo, char *strIN){
   Serial.print(F(" @ "));
   PrintRunTime();
 
-  PrintSpaces(40 - strlen(strIN));
+  // c++ pointer shit...
+  if (!len){
+    // TAKE CARE
+    // if strIN is a char-array a la strHLP - we already have the len of strIN
+    // if not, function got called with a (char*)"BlaBlaBla"
+    len = strlen(strIN);
+  }
+  
+  PrintSpaces(40 - len);
   //for (int i = 0; i < len; i++){
     //Print1Space();
   //}
   
   PrintDateTime();
+  Print1Space();
   EscInverse(0);
+//Serial.println("");
+//Serial.println(strlen(strIN));
 
 }
 
