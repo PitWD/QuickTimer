@@ -34,12 +34,15 @@ byte PrintMenuTop(char *strIN);
 void PrintMenuEnd(byte pos);
 
 void PrintMenuKey(char key, byte space, char leadChar, char trailChar, byte colon, byte bold, byte faint);
+void PrintMenuKeyBoldFaint(char key, byte bold, byte faint);
 void PrintMenuKeyStd(char key);
 void PrintMenuNo(char number);
 
 void PrintOFF(void);
 void PrintON(void);
-
+void PrintTrue(void);
+void PrintFalse(void);
+void PrintCharInSpaces(char charIN);
 void PrintSpacer(byte bold);
 
 #endif

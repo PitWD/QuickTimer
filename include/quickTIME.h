@@ -5,9 +5,11 @@
 
 byte DoTimer();
 void DoRealTime();
-void RTC_GetTemp();
-long RTC_GetDateTime();
-char RTC_SetDateTime();
+#if USE_RTC
+  void RTC_GetTemp();
+  long RTC_GetDateTime();
+  char RTC_SetDateTime();
+#endif
 byte IsLeapYear(uint16_t yearIN);
 byte GetWeekDay(uint32_t serialTime);
 uint32_t SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, byte minIN, byte secIN);

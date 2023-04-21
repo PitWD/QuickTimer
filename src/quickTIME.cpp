@@ -60,9 +60,11 @@ void DoRealTime(){
   // need to get called every second...
 
   //Trigger for RTC sync
-  static uint32_t triggerRTC = 0;
-  static long rtcSyncDiff = 0;
-
+  #if USE_RTC
+    static uint32_t triggerRTC = 0;
+    static long rtcSyncDiff = 0;
+  #endif
+  
   // Overflow day (default 32 = more months with 31 days)
   char overflowDay = 32;
 
@@ -119,19 +121,23 @@ void DoRealTime(){
       myYear++;
     }    
   }
-  if (syncRTCinterval){
-    if (!triggerRTC){
-      // sync with RTC
-      rtcSyncDiff = RTC_GetDateTime();
-      if (rtcSyncDiff){
-        // Update stuff which has 'LastActionTime" dependencies...
+  #if USE_RTC
+    if (syncRTCinterval){
+      if (!triggerRTC){
+        // sync with RTC
+        rtcSyncDiff = RTC_GetDateTime();
+        if (rtcSyncDiff){
+          // Update stuff which has 'LastActionTime" dependencies...
+        }
+        // reset trigger
+        triggerRTC = syncRTCinterval;
       }
-      // reset trigger
-      triggerRTC = syncRTCinterval;
+      triggerRTC--;
     }
-    triggerRTC--;
-  }
+  #endif
 }
+
+#if USE_RTC
 
 void RTC_GetTemp(){
   IIcSetBytes(0x68, (char*)"\x11", 1);
@@ -190,6 +196,8 @@ char RTC_SetDateTime(){
   return r;
 
 }
+
+#endif
 
 byte IsLeapYear(uint16_t yearIN){
   if (!(yearIN % 4) && (yearIN % 100)){

@@ -3,11 +3,16 @@
 
 // True = No floating-point support...
 #define SMALL_GetUserVal 1  
+// ASCII IIC protocol
+#define USE_ATLAS_PRTCL 0
+// Hardware RTC
+#define USE_RTC 1
+// Debug Values...
+#define USE_DEBUG_VALS 0
 
 // IIC IO/Buffer & Global HLP Strings
 #define IIC_STR_LEN 34
 #define STR_HLP_LEN 17
-#define USE_ATLAS_PRTCL 0
 
 
 #include <Arduino.h>
