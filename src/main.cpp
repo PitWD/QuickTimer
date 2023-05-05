@@ -27,7 +27,7 @@ void setup() {
 
   myFromRom();
 
-  Serial.begin(mySpeed);
+  Serial.begin(my.Speed);
 
   Wire.setClock(31000L);
   Wire.begin();
@@ -122,6 +122,7 @@ void loop() {
     }
     
     // Print Runtime
+    /*
     EscLocate(67,1);
     EscInverse(1);
     PrintRunTime();    
@@ -131,7 +132,8 @@ void loop() {
     Serial.print(F(" "));
     //EscColor(0);
     EscInverse(0);    
-    
+    */
+    PrintLoopTimes();
     firstRun = 0;
   }
 

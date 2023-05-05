@@ -244,7 +244,7 @@ long StrTokFloatIntToInt(char *strIN, int8_t autoScale){
         // New string with value(s)
         nextToken = strIN;
     }
-    byte firstVal = 1;
+    // byte firstVal = 1;
 
     while ((token = strtok(nextToken, ",")) != NULL) {
         // reset nextToken for subsequent calls to strtok()
@@ -508,7 +508,7 @@ byte GetUserString(char *strIN){
         // Print and save char
         if (c > 31 && c < 255){
           // Valid char
-          if (pos == STR_HLP_LEN){
+          if (pos == STR_HLP_LEN - 1){
             // MaxLen reached
             EscCursorLeft(1);
             pos--;
@@ -537,6 +537,7 @@ byte GetUserString(char *strIN){
 
   strHLP[eos] = 0;
   EscColor(0);
+  strcpy(strIN, strHLP);
   return 1;
 
 }
@@ -580,9 +581,12 @@ char GetUserKey(byte maxChar, byte noCnt){
       else if (charIN > 64 && charIN < maxChar - 31){
         // Valid BIG Letter selected
       }
-      else if (charIN == 13){
+      else if (charIN == 13 || charIN == 27){
         // Enter - Exit - Back
         r = 0;
+      }
+      else if (charIN == '+' || charIN == '-' || charIN == '<' || charIN == '>'){
+        // Up/Down
       }
       else{
         // Refresh

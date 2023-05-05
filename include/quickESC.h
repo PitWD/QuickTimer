@@ -41,7 +41,7 @@
 
 // ESC / Terminal hacks
 extern byte escFaintDeleteColor;
-extern int8_t escFaintIsActive;
+extern byte escFaintIsActive;
 extern byte fgFaint;
 
 
@@ -61,6 +61,9 @@ void EscCursorUp1st(byte cnt);
 void EscCursorDown1st(byte cnt);
 void EscSaveCursor();
 void EscRestoreCursor();
+void EscBoldColor(byte set);
+void EscKeyStyle(byte set);
+byte EscGetNextColor(byte colorIN);
 
 #endif
 

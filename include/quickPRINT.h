@@ -11,7 +11,7 @@ void PrintRunTime();
 void PrintDateTime();
 
 void PrintCharsCnt(char charToPrint, byte cnt);
-#define PrintSpaces(cnt) PrintCharsCnt(' ', cnt)
+void PrintSpaces(byte cnt); //PrintCharsCnt(' ', cnt)
 void Print1Space(void);
 
 byte PrintLine(byte pos, byte start, byte len);
@@ -32,11 +32,14 @@ void PrintErrorOK(int8_t err, byte len, char *strIN);
 void PrintCentered(char *strIN, byte centerLen);
 byte PrintMenuTop(char *strIN);
 void PrintMenuEnd(byte pos);
+void PrintLoopTimes();
 
 void PrintMenuKey(char key, byte space, char leadChar, char trailChar, byte colon, byte bold, byte faint);
-void PrintMenuKeyBoldFaint(char key, byte bold, byte faint);
+void PrintMenuKeyStdBoldFaint(char key, byte bold, byte faint);
 void PrintMenuKeyStd(char key);
-void PrintMenuNo(char number);
+void PrintMenuKeySmall(char key);
+void PrintMenuKeySmallBoldFaint(char key, byte bold, byte faint);
+void PrintMenuKeyBracketed(char key);
 
 void PrintOFF(void);
 void PrintON(void);

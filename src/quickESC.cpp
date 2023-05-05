@@ -2,7 +2,7 @@
 
 // ESC / Terminal hacks
 byte escFaintDeleteColor = 39;
-int8_t escFaintIsActive = 0;
+byte escFaintIsActive = 0;
 
 #if ESC_SOLARIZED
   byte fgFaint = 92;
@@ -52,8 +52,8 @@ void EscColor(byte color){
 
   #if ESC_CAN_FAINT
   #else  
-    if (escFaintIsActive == 0){
-      if(color < 40){
+    if (!escFaintIsActive){
+      if(((color >= fgBlack && color <= fgWhite) || (color >= fgBlackB && color <= fgWhiteB)) || color == 39){
         // It's a ForeColor
         escFaintDeleteColor = color;
       }
@@ -82,12 +82,12 @@ void EscFaint(byte set){
     }
   #else
     if (set){
-      escFaintIsActive = -1;
-      EscColor(fgFaint);
       escFaintIsActive = 1;
+      EscColor(fgFaint);
+      //escFaintIsActive = 1;
     }
     else{
-      escFaintIsActive = -2;
+      //escFaintIsActive = -2;
       EscColor(escFaintDeleteColor);
       escFaintIsActive = 0;
     }
@@ -162,3 +162,56 @@ void EscRestoreCursor(){
   Serial.print(F("\0338"));
 }
 
+void EscBoldColor(byte set){
+  if (set){
+    EscColor(set);
+    EscBold(1);
+  }
+  else{
+    EscBold(0);
+    EscColor(0);
+  }
+}
+
+void EscKeyStyle(byte set){
+  EscFaint(0);
+  if (set){
+    EscBoldColor(my.KeyColor);
+    EscUnder(1);
+  }
+  else{
+    EscUnder(0);
+    EscBoldColor(0);
+  }
+}
+
+byte EscGetNextColor(byte colorIN){
+  
+  byte r = colorIN;
+  
+  if (colorIN == fgWhiteB){
+    r = fgBlack;
+  }
+  else if (colorIN == fgWhite){
+    r = fgBlackB;
+  }
+  else if (colorIN == 0){
+    r = fgBlack;
+  }
+  else{
+    r++;
+    if (r >= fgBlack && r <= fgWhite){
+      // OK
+    }
+    else if (r >= fgBlackB && r <= fgWhiteB){
+      // OK
+    }
+    else{
+      // shit from fresh eeprom
+      r = fgBlack;
+    }
+  }
+
+  return r;
+
+}

@@ -54,7 +54,9 @@ void PrintCharsCnt(char charToPrint, byte cnt){
     Serial.print(charToPrint);
   }
 }
-
+void PrintSpaces(byte cnt){
+  PrintCharsCnt(' ', cnt);
+}
 // Print One Space
 void Print1Space(void){
     PrintSpaces(1);
@@ -152,8 +154,9 @@ void PrintErrorOK(int8_t err, byte len, char *strIN){
     //Print1Space();
   //}
   
-  PrintDateTime();
-  Print1Space();
+  //PrintDateTime();
+  //Print1Space();
+  
   EscInverse(0);
 //Serial.println("");
 //Serial.println(strlen(strIN));
@@ -172,6 +175,7 @@ void PrintCentered(char *strIN, byte centerLen){
 byte PrintMenuTop(char *strIN){
 
   EscCls();
+  EscColor(0);
   EscInverse(1);
   EscLocate(1, 1);
   EscBold(1);
@@ -185,49 +189,86 @@ void PrintMenuEnd(byte pos){
   Serial.println(F("\n"));
   Serial.print(F("    Select key, or Enter(for return)..."));
 }
+void PrintLoopTimes(){
+    // Print Runtime
+    EscLocate(67,1);
+    EscInverse(1);
+    PrintRunTime();    
+    // Print Realtime
+    EscLocate(61,24);
+    PrintDateTime();
+    Serial.print(F(" "));
+    EscInverse(0);    
+}
 
 void PrintMenuKey(char key, byte space, char leadChar, char trailChar, byte colon, byte bold, byte faint){
   // "space" is a leading space - (as very 1st print)
   // "key" is all time bold and underlined followed by a ')'
-  // "leadChar" (bold and underlined, too) is an option
-  // "colon" ': ' (not bold, nor underlined) is an option
+  // "colon" ': ' (bold, underlined) is an option
+  // "leadChar" (bold, underlined) is an option
+  // "trailChar" (not bold, nor underlined) is an option
   // "bold" sets bold on exit
   // "faint" sets faint on exit
+  // if bold and faint is true... don't do ESCKeyStyle (Hack to get faint (or whatever) - see i.e. manual-menu QuickWater)
 
   if (space){
     Print1Space();
   }
-  EscBold(1);
-  EscUnder(1);
+  if (!(bold && faint)){
+    EscKeyStyle(1);
+  }
+  
   if (leadChar){
     Serial.print(leadChar);
   }
   Serial.print(key);
   Serial.print(F(")"));
+  if (colon){
+    Serial.print(F(":"));
+  }
   EscBold(0);
   EscUnder(0);
   if (colon){
-    Serial.print(F(": "));
+    Print1Space();
   }
   if (trailChar){
     Serial.print(trailChar);
   }
-  if (bold){
+  EscColor(0);
+  if (bold && !faint){
     EscBold(1);
   }
-  else if (faint){
+  else if (faint && !bold){
     EscFaint(1);
   }
   
 }
-void PrintMenuKeyBoldFaint(char key, byte bold, byte faint){
+void PrintMenuKeyStdBoldFaint(char key, byte bold, byte faint){
+  // "A): "
   PrintMenuKey(key, 0, 0, 0, 1, bold, faint);
+/*
+  PrintMenuKey((char)(ezo + 49), 0, '(', 0, 0, bold, !bold);
+  PrintMenuKey(i + 'o', 0, '(', ' ', 0, 1, 0);
+  PrintMenuKey(i + 'A', 1, '(', 0, 0, 0, 0);
+  PrintMenuKey(i + 'G', 1, '(', 0, 0, 0, 0);
+
+*/
 }
 void PrintMenuKeyStd(char key){
+   // "A): "
   PrintMenuKey(key, 0, 0, 0, 1, 0, 0);
 }
-void PrintMenuNo(char number){
-  PrintMenuKey(number, 1, '(', 0, 0, 0, 0);
+void PrintMenuKeySmall(char key){
+  // "A) "
+  PrintMenuKey(key, 0, 0, ' ', 0, 0, 0);
+}
+void PrintMenuKeySmallBoldFaint(char key, byte bold, byte faint){
+  // "A) "
+  PrintMenuKey(key, 0, 0, ' ', 0, bold, faint);
+}
+void PrintMenuKeyBracketed(char key){
+  // " (A)"
+  PrintMenuKey(key, 1, '(', 0, 0, 0, 0);
 }
 
 void PrintOFF(void){

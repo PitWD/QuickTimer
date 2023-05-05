@@ -105,5 +105,17 @@ extern byte adrDefault;
 // ModBusAddress
 extern byte myAddress;
 
+struct mySTRUCT{
+  byte Boot; // = 0;    // 0 = Terminal  /  1 = Slave
+  uint32_t Speed; // = 9600;
+  byte Solarized; // = 0;
+  byte Address; // = 123;
+  byte Default; // = 0;
+  byte Cnt; // = 0;
+  byte Setting; // = 0;
+  byte Temporary; // = 0;
+  byte KeyColor;
+};
+extern mySTRUCT my;
 
 #endif /* QUICKLIB_H */

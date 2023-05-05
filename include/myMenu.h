@@ -7,37 +7,33 @@
 #include <myTime.h>
 
 // my Eeprom - Variables
+
+/*
 byte myBoot = 0;    // 0 = Terminal  /  1 = Slave
 uint32_t mySpeed = 9600;
 byte mySolarized = 0;
 byte myAddress = 123;
+*/
+
+mySTRUCT my;
 
 void myToRom(){
-  EEPROM.put(1000, myBoot);       // byte
-  EEPROM.put(1001, mySolarized);  // byte
-  EEPROM.put(1002, myAddress);    // byte
-  EEPROM.put(1003, mySpeed);      // 4 byte
-  // 1007 is next...
+  EEPROM.put(997, my);
+  // 1011 is next...
 }
 void myFromRom(){
-  EEPROM.get(1000, myBoot);
-  EEPROM.get(1001, mySolarized);
-  EEPROM.get(1002, myAddress);
-  EEPROM.get(1003, mySpeed);
-  // 1007 is next...
-
-  if (!IsSerialSpeedValid(mySpeed)){
-    mySpeed = 9600;
+  // 1011 is next...
+  EEPROM.get(997, my);
+  if (!IsSerialSpeedValid(my.Speed)){
+    my.Speed = 9600;
   }
+  /*
   if (!myAddress || myAddress > 254){
     myAddress = 123;
   }
-  if (mySolarized){
-    fgFaint = 92;
-  }
-  else{
-    fgFaint = 90;
-  }
+  */
+  
+  fgFaint = my.Solarized;
 
 }
 
@@ -306,12 +302,12 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
       PrintSerTime(runningTimer.onTime[0], 0, 1);
     }
     
-    PrintMenuNo('1');
+    PrintMenuKeyBracketed('1');
     PrintSpacer(0);
     if (runningTimer.type.whileON){
       // whileON
       PrintSerTime(runningTimer.onTime[1], 0, 1);
-      PrintMenuNo('4');
+      PrintMenuKeyBracketed('4');
       PrintSpacer(0);
     }
     else if (runningTimer.type.whileOFF){
@@ -322,7 +318,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     if (runningTimer.type.whileOFF){
       // whileOFF
       PrintSerTime(runningTimer.onTime[2], 0, 1);
-      PrintMenuNo('7');
+      PrintMenuKeyBracketed('7');
       PrintSpacer(0);
     }
     PrintTimerUnderLine(0);
@@ -342,12 +338,12 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
       PrintSerTime(runningTimer.offTime[0], 0, 1);
     }
         
-    PrintMenuNo('2');
+    PrintMenuKeyBracketed('2');
     PrintSpacer(0);
     if (runningTimer.type.whileON){
       // whileON
       PrintSerTime(runningTimer.offTime[1], 0, 1);
-      PrintMenuNo('5');
+      PrintMenuKeyBracketed('5');
       PrintSpacer(0);
     }
     else if (runningTimer.type.whileOFF){
@@ -358,7 +354,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     if (runningTimer.type.whileOFF){
       // triple
       PrintSerTime(runningTimer.offTime[2], 0, 1);
-      PrintMenuNo('8');
+      PrintMenuKeyBracketed('8');
       PrintSpacer(0);
     }
   }
@@ -376,14 +372,14 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     }
     else{
       PrintSerTime(runningTimer.offset[0], 0, 1);
-      PrintMenuNo('3');
+      PrintMenuKeyBracketed('3');
     }
     PrintSpacer(0);
     r2++; // += 2;
     if (runningTimer.type.whileON){
       // whileON
       PrintSerTime(runningTimer.offset[1], 0, 1);
-      PrintMenuNo('6');
+      PrintMenuKeyBracketed('6');
       PrintSpacer(0);  
   }
     else if (runningTimer.type.whileOFF){
@@ -394,7 +390,7 @@ byte PrintTimerTable(byte timer, byte posX, byte posY){
     if (runningTimer.type.whileOFF){
       // whileOFF
       PrintSerTime(runningTimer.offset[2], 0, 1);
-      PrintMenuNo('9');
+      PrintMenuKeyBracketed('9');
       PrintSpacer(0);
     }
   }
@@ -459,7 +455,7 @@ Start:
   Serial.print(F("Mon  "));
 
   PrintMenuKey('J', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 3)));
-  Serial.print(F("TUE  "));
+  Serial.print(F("Tue  "));
 
   PrintMenuKey('K', 0, 0, 0, 1, 0, (!bitRead(runningTimer.weekDays, 4)));
   Serial.print(F("Wed  "));
@@ -739,7 +735,7 @@ void PrintLoopMenu(){
     }
     if (r){
       EscLocate(5, pos);
-      PrintMenuKey((char)(65 + i), 0, 0, ' ', 1, 0, 0);
+      PrintMenuKey(i + 'a', 0, 0, ' ', 1, 0, 0);
       TimerFromRomRam(i, 1);
       PrintTimerLine1(i, 9, pos++, 1, 2);
     }
@@ -769,7 +765,7 @@ Start:
   for (int i = 0; i < RUNNING_TIMERS_CNT; i++){
     pos++;
     EscLocate(5, pos);
-    PrintMenuKey((char)(65 + i), 0, 0, ' ', 1, 0, 0);
+    PrintMenuKey(i + 'a', 0, 0, ' ', 1, 0, 0);
     TimerFromRomRam(i, 1);
     PrintTimerLine1(i, 0, 0, 1, 1);
   }
@@ -777,58 +773,35 @@ Start:
   pos = PrintShortLine(pos + 1, 8);
 
   EscLocate(5, pos);
-  PrintMenuKeyStd('1');
-  Serial.print(F("ReBoot"));
-  EscLocate(18, pos);
-  PrintMenuKeyStd('2');
-  Serial.print(F("Date"));
-  EscLocate(29, pos);
-  PrintMenuKeyStd('3');
-  Serial.print(F("Time"));
-  EscLocate(40, pos);
-  PrintMenuKeyStd('4');
-  Serial.print(F("Address = "));
-  PrintBoldValue(myAddress, 3, '0');
-  EscLocate(60, pos++);
-  PrintMenuKeyStd('5');
-  Serial.print(F("Speed = "));
+  PrintMenuKeyStd('1'); Serial.print(F("ReBoot"));
+  PrintSpaces(3);
+  PrintMenuKeyStd('2'); Serial.print(F("Date"));
+  PrintSpaces(3);
+  PrintMenuKeyStd('3'); Serial.print(F("Time"));
+  PrintSpaces(3);
+  PrintMenuKeyStd('4'); Serial.print(F("Address = "));
+  PrintBoldValue(my.Address, 3, '0');
+  PrintSpaces(3);
+  PrintMenuKeyStd('5'); Serial.print(F("Speed = "));
   EscBold(1);
-  Serial.print(mySpeed);
+  Serial.print(my.Speed);
   
-  EscLocate(5, pos);
-  PrintMenuKeyStd('6');
-  Serial.print(F("Boot4Terminal = "));
-  if (myBoot){
-    EscFaint(1);
-    Serial.print(F("False"));
-    EscLocate(34, pos);
-  }
-  else{
-    EscBold(1);
-    Serial.print(F("True"));
-    EscLocate(33, pos);
-  }
+  EscLocate(5, pos + 1);
+  PrintMenuKeyStdBoldFaint('6', !my.Boot, my.Boot); Serial.print(F("Boot4Terminal"));
+  PrintSpaces(3);
+  PrintMenuKeyStdBoldFaint('7', my.Boot, !my.Boot); Serial.print(F("Boot4ModBUS"));
+  PrintSpaces(3);
 
-  PrintMenuKeyStd('7');
-  Serial.print(F("Boot4Slave = "));
-  if (myBoot){
-    EscBold(1);
-    Serial.print(F("True"));
-    EscLocate(58, pos++);
-  }
-  else{
-    EscFaint(1);
-    Serial.print(F("False"));
-    EscLocate(59, pos++);
-  }
-
-  PrintMenuKey('8', 0, 0, 0, 1, (mySolarized), (!mySolarized));
-  Serial.print(F("Sol.Color"));
-  EscBold(0);
+  PrintMenuKeyStd('8'); Serial.print(F("Dim"));
+  EscFaint(1);
+  Serial.print(F("Color"));
+  EscFaint(0);
+  PrintSpaces(3);
+  PrintMenuKeyStd('9'); Serial.print(F("KeyColor"));
 
   PrintMenuEnd(pos + 1);
 
-  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 8);
+  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 9);
   switch (pos){
   case -1:
     // TimeOut
@@ -854,8 +827,8 @@ Start:
     break;
   case '4':
     // Set Address
-    myAddress = GetUserInt(myAddress);
-    if (!myAddress || myAddress > 254){
+    my.Address = GetUserInt(my.Address);
+    if (!my.Address || my.Address > 254){
       // illegal address - reload from eeprom
       myFromRom();
     }
@@ -866,8 +839,8 @@ Start:
     break;
   case '5':
     // Set Speed
-    mySpeed = GetUserInt(mySpeed);
-    if (IsSerialSpeedValid(mySpeed)){ 
+    my.Speed = GetUserInt(my.Speed);
+    if (IsSerialSpeedValid(my.Speed)){ 
       // valid - save to eeprom
       myToRom();
     }
@@ -878,24 +851,26 @@ Start:
     break;    
   case '6':
     // Boot Terminal
-    myBoot = 0;
+    my.Boot = 0;
     myToRom();
     break;
   case '7':
     // Boot Slave
-    myBoot = 1;
+    my.Boot = 1;
     myToRom();
     break;
   case '8':
-    // Use Solarized Color-Hack
-    mySolarized = !mySolarized;
-    fgFaint = 90 + (mySolarized * 2);
-    // Save to eeprom
+    // Solarized
+    my.Solarized = EscGetNextColor(my.Solarized);
+    fgFaint = my.Solarized;
     myToRom();
     break;
-  case '0':
   case '9':
-    // NA
+    // KeyColor
+    my.KeyColor = EscGetNextColor(my.KeyColor);
+    myToRom();
+    break;    
+  case '0':
     break;
   default:
     // Timer
