@@ -612,6 +612,11 @@ Start:
     // All Days
     runningTimer.weekDays = 0;
     break;
+  case 'h' ... 'n':
+    // Sunday to Saturday
+    runningTimer.weekDays = setBit(runningTimer.weekDays, pos - 'g', !getBit(runningTimer.weekDays, pos - 'g'));
+    break;
+  /*
   case 'h':
     // Sunday
     runningTimer.weekDays = setBit(runningTimer.weekDays, 1, !getBit(runningTimer.weekDays, 1));
@@ -640,6 +645,7 @@ Start:
     // Saturday
     runningTimer.weekDays = setBit(runningTimer.weekDays, 7, !getBit(runningTimer.weekDays, 7));
     break;
+  */
   case 'o':
     // Automatic
     runningTimer.state.automatic = 1;
