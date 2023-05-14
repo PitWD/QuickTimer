@@ -799,21 +799,32 @@ Start:
   Serial.print(my.Speed);
   
   EscLocate(5, pos + 1);
-  PrintMenuKeyStdBoldFaint('6', !my.Boot, my.Boot); Serial.print(F("Boot4Terminal"));
-  PrintSpaces(3);
-  PrintMenuKeyStdBoldFaint('7', my.Boot, !my.Boot); Serial.print(F("Boot4ModBUS"));
+  PrintMenuKeyStdBoldFaint('6', 1, 0);
+  if (my.Boot){
+    // Boot for ModBus
+    Serial.print(F("Boot4ModBUS"));
+  }
+  else{
+    // Boot for Terminal
+    Serial.print(F("Boot4Terminal"));
+  }
+  
+  
+  //PrintMenuKeyStdBoldFaint('6', !my.Boot, my.Boot); Serial.print(F("Boot4Terminal"));
+  //PrintSpaces(3);
+  //PrintMenuKeyStdBoldFaint('7', my.Boot, !my.Boot); Serial.print(F("Boot4ModBUS"));
   PrintSpaces(3);
 
-  PrintMenuKeyStd('8'); Serial.print(F("Dim"));
+  PrintMenuKeyStd('7'); Serial.print(F("Dim"));
   EscFaint(1);
   Serial.print(F("Color"));
   EscFaint(0);
   PrintSpaces(3);
-  PrintMenuKeyStd('9'); Serial.print(F("KeyColor"));
+  PrintMenuKeyStd('8'); Serial.print(F("KeyColor"));
 
   PrintMenuEnd(pos + 1);
 
-  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 9);
+  pos = GetUserKey(RUNNING_TIMERS_CNT - 1 + 97, 8);
   switch (pos){
   case -1:
     // TimeOut
@@ -862,22 +873,22 @@ Start:
     }
     break;    
   case '6':
-    // Boot Terminal
-    my.Boot = 0;
+    // Boot Terminal / Boot ModBus
+    my.Boot = !my.Boot;
     myToRom();
     break;
-  case '7':
+  //case '7':
     // Boot Slave
-    my.Boot = 1;
-    myToRom();
-    break;
-  case '8':
+    //my.Boot = 1;
+    //myToRom();
+    //break;
+  case '7':
     // Solarized
     my.Solarized = EscGetNextColor(my.Solarized);
     fgFaint = my.Solarized;
     myToRom();
     break;
-  case '9':
+  case '8':
     // KeyColor
     my.KeyColor = EscGetNextColor(my.KeyColor);
     myToRom();
