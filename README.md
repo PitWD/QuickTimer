@@ -56,3 +56,7 @@ In this example it's "just" an interval timer in automatic mode. 08:30:00 hours 
 The **timer edit menu** with another timer. 
 In this example it's an timer which does different on/off intervals while the state of the main interval is on or off.
 ![Main Screen](/images/Auswahl_006.png)
+
+<br>
+
+**Cause there are plenty running prototypes I can declare this project as 100% usable - but the project is still under heavy development. Some planned extensions will break the actual structure of the internal eeprom - this will break the user made settings. There is actually no safe "fuse" to prevent that re-flashed µC's with a then broken eeprom will boot in a usable state.**
