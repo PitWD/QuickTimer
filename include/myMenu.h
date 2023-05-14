@@ -432,7 +432,7 @@ Start:
   EscLocate(4, pos++);
   PrintMenuKeyStdBoldFaint('a', (runningTimer.type.interval), 0); // && !runningTimer.type.whileON && !runningTimer.type.whileOFF), 0);
   Serial.print(F("Interval Timer     "));
-  
+
   PrintMenuKeyStdBoldFaint('b', (runningTimer.type.whileON), 0);
   Serial.print(F("whileON Timer     "));
 
@@ -445,6 +445,7 @@ Start:
 
   PrintMenuKeyStdBoldFaint('e', (runningTimer.type.invert), 0);
   Serial.print(F("Inverted Port     "));
+
 
   PrintMenuKeyStdBoldFaint('f', (!runningTimer.type.interval && !runningTimer.type.dayTimer), 0);
   Serial.print(F("Disabled"));
@@ -479,10 +480,12 @@ Start:
 
   EscLocate(4, pos++);
   PrintMenuKeyStdBoldFaint('o', (runningTimer.state.automatic), 0);
-  Serial.print(F("Automatic          "));
+  Serial.print(F("Automatic"));
+  PrintSpaces(10);
 
   PrintMenuKeyStdBoldFaint('p', (runningTimer.state.permOff), 0);
-  Serial.print(F("Permanent OFF      "));
+  Serial.print(F("Permanent OFF"));
+  PrintSpaces(6);
 
   PrintMenuKeyStdBoldFaint('q', (runningTimer.state.permOn), 0);
   Serial.print(F("Permanent ON"));
@@ -491,11 +494,13 @@ Start:
 
   EscLocate(4, pos++);
   PrintMenuKeyStdBoldFaint('r', (runningTimer.state.tempOff), 0);
-  Serial.print(F("Temporary OFF      "));
+  Serial.print(F("Temporary OFF"));
+  PrintSpaces(6);
 
   PrintMenuKeyStdBoldFaint('s', (runningTimer.state.tempOn), 0);
-  Serial.print(F("Temporary ON       "));
-  
+  Serial.print(F("Temporary ON"));
+  PrintSpaces(7);
+
   PrintMenuKeyStd('t');
   Serial.print(F("SetTempTime: "));
   EscBold(1);
@@ -785,12 +790,9 @@ Start:
   pos = PrintShortLine(pos + 1, 8);
 
   EscLocate(5, pos);
-  PrintMenuKeyStd('1'); Serial.print(F("ReBoot"));
-  PrintSpaces(3);
-  PrintMenuKeyStd('2'); Serial.print(F("Date"));
-  PrintSpaces(3);
-  PrintMenuKeyStd('3'); Serial.print(F("Time"));
-  PrintSpaces(3);
+  PrintMenuKeyStd('1'); Serial.print(F("ReBoot   "));
+  PrintMenuKeyStd('2'); Serial.print(F("Date   "));
+  PrintMenuKeyStd('3'); Serial.print(F("Time   "));
   PrintMenuKeyStd('4'); Serial.print(F("Address = "));
   PrintBoldValue(my.Address, 3, '0');
   PrintSpaces(3);
@@ -808,18 +810,17 @@ Start:
     // Boot for Terminal
     Serial.print(F("Boot4Terminal"));
   }
+  PrintSpaces(3);
   
   
   //PrintMenuKeyStdBoldFaint('6', !my.Boot, my.Boot); Serial.print(F("Boot4Terminal"));
   //PrintSpaces(3);
   //PrintMenuKeyStdBoldFaint('7', my.Boot, !my.Boot); Serial.print(F("Boot4ModBUS"));
-  PrintSpaces(3);
 
   PrintMenuKeyStd('7'); Serial.print(F("Dim"));
   EscFaint(1);
-  Serial.print(F("Color"));
+  Serial.print(F("Color   "));
   EscFaint(0);
-  PrintSpaces(3);
   PrintMenuKeyStd('8'); Serial.print(F("KeyColor"));
 
   PrintMenuEnd(pos + 1);
