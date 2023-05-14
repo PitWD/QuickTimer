@@ -430,73 +430,73 @@ Start:
   pos = pos + PrintTimerTable(timer, 11, pos);
 
   EscLocate(4, pos++);
-  PrintMenuKeyStdBoldFaint('A', (runningTimer.type.interval), 0); // && !runningTimer.type.whileON && !runningTimer.type.whileOFF), 0);
+  PrintMenuKeyStdBoldFaint('a', (runningTimer.type.interval), 0); // && !runningTimer.type.whileON && !runningTimer.type.whileOFF), 0);
   Serial.print(F("Interval Timer     "));
   
-  PrintMenuKeyStdBoldFaint('B', (runningTimer.type.whileON), 0);
+  PrintMenuKeyStdBoldFaint('b', (runningTimer.type.whileON), 0);
   Serial.print(F("whileON Timer     "));
 
-  PrintMenuKeyStdBoldFaint('C', (runningTimer.type.whileOFF), 0);
+  PrintMenuKeyStdBoldFaint('c', (runningTimer.type.whileOFF), 0);
   Serial.print(F("whileOFF Timer"));
   
   EscLocate(4, pos++);
-  PrintMenuKeyStdBoldFaint('D', (runningTimer.type.dayTimer), 0);
+  PrintMenuKeyStdBoldFaint('d', (runningTimer.type.dayTimer), 0);
   Serial.print(F("24h-Day Timer      "));
 
-  PrintMenuKeyStdBoldFaint('E', (runningTimer.type.invert), 0);
+  PrintMenuKeyStdBoldFaint('e', (runningTimer.type.invert), 0);
   Serial.print(F("Inverted Port     "));
 
-  PrintMenuKeyStdBoldFaint('F', (!runningTimer.type.interval && !runningTimer.type.dayTimer), 0);
+  PrintMenuKeyStdBoldFaint('f', (!runningTimer.type.interval && !runningTimer.type.dayTimer), 0);
   Serial.print(F("Disabled"));
   PrintShortLine(pos++, 4);
   
   EscLocate(4, pos++);
-  PrintMenuKeyStdBoldFaint('G', (!runningTimer.weekDays), (runningTimer.weekDays));
+  PrintMenuKeyStdBoldFaint('g', !runningTimer.weekDays, runningTimer.weekDays);
   Serial.print(F("ALL  "));
 
-  PrintMenuKeyStdBoldFaint('H', 0, (!bitRead(runningTimer.weekDays, 1)));
+  PrintMenuKeyStdBoldFaint('h', bitRead(runningTimer.weekDays, 1), !bitRead(runningTimer.weekDays, 1));
   Serial.print(F("Sun  "));
 
-  PrintMenuKeyStdBoldFaint('I', 0, (!bitRead(runningTimer.weekDays, 2)));
+  PrintMenuKeyStdBoldFaint('i', bitRead(runningTimer.weekDays, 2), !bitRead(runningTimer.weekDays, 2));
   Serial.print(F("Mon  "));
 
-  PrintMenuKeyStdBoldFaint('J', 0, (!bitRead(runningTimer.weekDays, 3)));
+  PrintMenuKeyStdBoldFaint('j', bitRead(runningTimer.weekDays, 3), !bitRead(runningTimer.weekDays, 3));
   Serial.print(F("Tue  "));
 
-  PrintMenuKeyStdBoldFaint('K', 0, (!bitRead(runningTimer.weekDays, 4)));
+  PrintMenuKeyStdBoldFaint('k', bitRead(runningTimer.weekDays, 4), !bitRead(runningTimer.weekDays, 4));
   Serial.print(F("Wed  "));
 
-  PrintMenuKeyStdBoldFaint('L', 0, (!bitRead(runningTimer.weekDays, 5)));
+  PrintMenuKeyStdBoldFaint('l', bitRead(runningTimer.weekDays, 5), !bitRead(runningTimer.weekDays, 5));
   Serial.print(F("Thu  "));
 
-  PrintMenuKeyStdBoldFaint('M', 0, (!bitRead(runningTimer.weekDays, 6)));
+  PrintMenuKeyStdBoldFaint('m', bitRead(runningTimer.weekDays, 6), !bitRead(runningTimer.weekDays, 6));
   Serial.print(F("Fri  "));
 
-  PrintMenuKeyStdBoldFaint('N', 0, (!bitRead(runningTimer.weekDays, 7)));
+  PrintMenuKeyStdBoldFaint('n', bitRead(runningTimer.weekDays, 7), !bitRead(runningTimer.weekDays, 7));
   Serial.print(F("Sat  "));  
 
   PrintShortLine(pos++, 4);
 
   EscLocate(4, pos++);
-  PrintMenuKeyStdBoldFaint('O', (runningTimer.state.automatic), 0);
+  PrintMenuKeyStdBoldFaint('o', (runningTimer.state.automatic), 0);
   Serial.print(F("Automatic          "));
 
-  PrintMenuKeyStdBoldFaint('P', (runningTimer.state.permOff), 0);
+  PrintMenuKeyStdBoldFaint('p', (runningTimer.state.permOff), 0);
   Serial.print(F("Permanent OFF      "));
 
-  PrintMenuKeyStdBoldFaint('Q', (runningTimer.state.permOn), 0);
+  PrintMenuKeyStdBoldFaint('q', (runningTimer.state.permOn), 0);
   Serial.print(F("Permanent ON"));
 
   PrintShortLine(pos++, 4);
 
   EscLocate(4, pos++);
-  PrintMenuKeyStdBoldFaint('R', (runningTimer.state.tempOff), 0);
+  PrintMenuKeyStdBoldFaint('r', (runningTimer.state.tempOff), 0);
   Serial.print(F("Temporary OFF      "));
 
-  PrintMenuKeyStdBoldFaint('S', (runningTimer.state.tempOn), 0);
+  PrintMenuKeyStdBoldFaint('s', (runningTimer.state.tempOn), 0);
   Serial.print(F("Temporary ON       "));
   
-  PrintMenuKeyStd('T');
+  PrintMenuKeyStd('t');
   Serial.print(F("SetTempTime: "));
   EscBold(1);
   PrintSerTime(tempTime, 0, 1);
