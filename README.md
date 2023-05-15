@@ -28,7 +28,7 @@ Untested right now, but terminal-apps for mobile phones will be able to manage C
 
 - <a href="https://github.com/PitWD/QuickWater"> CannaWatery</a> to measure and regulate pH, EC, °C, Redox, O2 and level of your water. *All water specific sensors/modules from <a href="https://atlas-scientific.com/"> Atlas-Scientific</a> are supported.* 
 
-- <a href="https://github.com/PitWD/QuickAir"> CannaBreeze</a> to measure and regulate temperature, humidity, CO2, O2. *All climate/air specific sensors/modules from <a href="https://atlas-scientific.com/"> Atlas-Scientific</a> are supported.*
+- <a href="https://github.com/PitWD/QuickAir"> CannaBreezy</a> to measure and regulate temperature, humidity, CO2, O2. *All climate/air specific sensors/modules from <a href="https://atlas-scientific.com/"> Atlas-Scientific</a> are supported.*
 
 All three together are the base to have a very solid control over your grow. Their ability to function as ModBUS slaves makes it possible to let (multiple of) them act in a bigger context under control of more complex controllers, HMIs and 3rd party products.
 
