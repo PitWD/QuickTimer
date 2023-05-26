@@ -81,6 +81,9 @@ void EscFaint(byte set){
       EscBold(0);
     }
   #else
+    // disable bold first
+    escFaintIsActive = 0;
+    EscBold(0);
     if (set){
       escFaintIsActive = 1;
       EscColor(fgFaint);
@@ -89,7 +92,6 @@ void EscFaint(byte set){
     else{
       //escFaintIsActive = -2;
       EscColor(escFaintDeleteColor);
-      escFaintIsActive = 0;
     }
   #endif
 
@@ -164,6 +166,7 @@ void EscRestoreCursor(){
 
 void EscBoldColor(byte set){
   if (set){
+    EscFaint(0);
     EscColor(set);
     EscBold(1);
   }
