@@ -728,7 +728,7 @@ Start:
 void PrintLoopMenu(){
 
   byte r = 1;
-  byte pos = PrintMenuTop((char*)"- QuickTimer 1.04 -");
+  byte pos = PrintMenuTop((char*)"- QuickTimer 1.05 -");
 
   pos += 2;
 
