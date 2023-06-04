@@ -416,4 +416,8 @@ Connection ~ 3250 3300
 Wire Wire Line
 	3150 4350 3250 4350
 Connection ~ 3250 4350
+Wire Notes Line
+	24600 3700 26400 3700
+Wire Notes Line
+	26400 3700 26400 3650
 $EndSCHEMATC
