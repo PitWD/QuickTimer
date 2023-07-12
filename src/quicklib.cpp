@@ -355,6 +355,12 @@ byte GetUserString(char *strIN){
   byte pos = 0;                         // Position of cursor (0 = in front of 1st char)
   #define strMaxLen (STR_HLP_LEN - 1)   // max len of string without termination
   
+  if (eos > strMaxLen || strIN[0] == 255){
+    // Fresh flashed CPU has an messy Eprom...
+    eos = 0;
+    strIN[0] = 0; // Termination
+  }
+
   byte sel1st = 0;                      // pos of 1st selected char
   byte selCnt = 0;                      // cnt of selected chars
   byte selPosLeft = 0;                  // 0 = cursor is right of selection / 1 = left of selection
