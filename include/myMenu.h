@@ -774,7 +774,7 @@ Start:
   // To see right Last/Next after StartUp und changes...
   RunTimers();
 
-  char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.04 -");
+  char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.05 -");
   
   uint32_t hlpDate = 0;
   uint32_t hlpTime = 0;
