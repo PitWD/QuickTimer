@@ -6,6 +6,8 @@
 #include <EEPROM.h>
 #include <myTime.h>
 
+void (*softReset)(void) = 0;
+
 // my Eeprom - Variables
 
 /*
@@ -838,6 +840,7 @@ Start:
     break;
   case '1':
     // ReBoot
+    softReset();
     break;
   case '2':
     // Set Date
