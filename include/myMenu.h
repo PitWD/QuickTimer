@@ -725,10 +725,14 @@ Start:
   }
 }
 
+byte PrintQuickTimer(){
+  return PrintMenuTop((char*)"- QuickTimer 1.05 -");
+}
+
 void PrintLoopMenu(){
 
   byte r = 1;
-  byte pos = PrintMenuTop((char*)"- QuickTimer 1.05 -");
+  byte pos = PrintQuickTimer();
 
   pos += 2;
 
@@ -774,7 +778,7 @@ Start:
   // To see right Last/Next after StartUp und changes...
   RunTimers();
 
-  char pos = PrintMenuTop((char*)"- Main Menu QuickTimer 1.05 -");
+  char pos = PrintQuickTimer();
   
   uint32_t hlpDate = 0;
   uint32_t hlpTime = 0;
