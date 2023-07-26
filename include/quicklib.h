@@ -47,6 +47,8 @@
 
 byte IsSerialSpeedValid(uint32_t speed);
 
+byte GetONEchar();
+
 #if SMALL_GetUserVal
   byte IntToStr_SMALL(long val, char cntLeadingChar, char leadingChar);
   #define IntToIntStr(val, cntLeadingChar, leadingChar) IntToStr_SMALL(val, cntLeadingChar, leadingChar)
@@ -106,14 +108,15 @@ extern byte adrDefault;
 extern byte myAddress;
 
 struct mySTRUCT{
-  byte Boot; // = 0;    // 0 = Terminal  /  1 = Slave
-  uint32_t Speed; // = 9600;
-  byte Solarized; // = 0;
-  byte Address; // = 123;
-  byte Default; // = 0;
-  byte Cnt; // = 0;
-  byte Setting; // = 0;
-  byte Temporary; // = 0;
+  // 12 Byte
+  byte Boot;        // = 0;    // 0 = Terminal  /  1 = Slave
+  uint32_t Speed;   // = 9600;
+  byte Solarized;   // = 0;
+  byte Address;     // = 123;
+  byte Default;     // = 0;
+  byte Cnt;         // = 0;
+  byte Setting;     // = 0;
+  byte Temporary;   // = 0;   ??? Is this manual ???
   byte KeyColor;
 };
 extern mySTRUCT my;

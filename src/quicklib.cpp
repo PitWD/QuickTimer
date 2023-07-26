@@ -16,6 +16,29 @@ byte IsSerialSpeedValid(uint32_t speed){
     return 1;
 }
 
+byte GetONEchar(){
+
+  // If SerialInput is just one char, we return this char
+  // If SerialInput is more than one char we return 0
+  // If there is no SerialInput we return 0
+
+  byte r = 0;
+
+  if (Serial.available()){
+    r = Serial.read();
+    delay(12);  // Wait 4 next char in a eventually trashy input
+    while (Serial.available()){
+      // Messy input...
+      Serial.read();
+      delay(12);
+      r = 0;
+    }    
+  }
+
+  return r;
+
+}
+
 // IntToStrInt / IntToStrFloat
 #if SMALL_GetUserVal
   // Just Integer
@@ -360,7 +383,7 @@ byte GetUserString(char *strIN){
     eos = 0;
     strIN[0] = 0; // Termination
   }
-
+  
   byte sel1st = 0;                      // pos of 1st selected char
   byte selCnt = 0;                      // cnt of selected chars
   byte selPosLeft = 0;                  // 0 = cursor is right of selection / 1 = left of selection
@@ -960,8 +983,8 @@ char GetUserKey(byte maxChar, byte noCnt){
       // A Second is over...
       timeOut--;
     }
-    if (Serial.available()){
-      charIN = Serial.read();
+    charIN = GetONEchar();
+    if (charIN){
       timeOut = 0;
       r = charIN;
       if (charIN > 47 && charIN - 48 <= noCnt){

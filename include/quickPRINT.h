@@ -16,6 +16,7 @@ void Print1Space(void);
 
 byte PrintLine(byte pos, byte start, byte len);
 #define PrintShortLine(posY, posX) PrintLine(posY, posX, 3)
+byte PrintDashLine(byte pos, byte start, byte len);
 
 #if SMALL_GetUserVal
     byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar);

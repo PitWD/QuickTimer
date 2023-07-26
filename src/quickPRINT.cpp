@@ -71,6 +71,18 @@ byte PrintLine(byte posY, byte posX, byte len){
   return posY;
 }
 
+byte PrintDashLine(byte posY, byte posX, byte len){
+  if (posY && posX){
+    EscLocate(posX, posY++);
+  }
+  len /= 2;
+  while (len--){
+    Serial.print(F("- "));
+  }
+  return posY;
+}
+
+
 #if SMALL_GetUserVal
   byte PrintBoldValue(long val, byte cntLeadingZeros, char leadingChar){
     
@@ -90,7 +102,7 @@ byte PrintLine(byte posY, byte posX, byte len){
     byte r = 0;
     
     EscBold(bold);
-    
+      
     if (cntDecimalPlaces){
       r = IntToFloatStr(val, cntLeadingZeros, cntDecimalPlaces, leadingChar);
     }

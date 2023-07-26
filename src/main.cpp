@@ -137,8 +137,8 @@ void loop() {
     firstRun = 0;
   }
 
-  if (Serial.available()){
-    pos = Serial.read();
+  pos = GetONEchar();
+  if (pos){
     if (pos > 96 && pos < 97 + RUNNING_TIMERS_CNT){
       PrintEditMenu(pos - 97);
       PrintLoopMenu();
