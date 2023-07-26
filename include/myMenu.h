@@ -728,7 +728,7 @@ Start:
 }
 
 byte PrintQuickTimer(){
-  return PrintMenuTop((char*)"- QuickTimer 1.05 -");
+  return PrintMenuTop((char*)"- QuickTimer 1.06 -");
 }
 
 void PrintLoopMenu(){
