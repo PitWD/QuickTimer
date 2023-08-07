@@ -8,22 +8,22 @@
 #define RUNNING_TIMERS_CNT 16
 
 struct TimerSTRUCT{
-  uint32_t onTime[3];
-  uint32_t offTime[3];
-  uint32_t offset[3];
-  struct typeUNION{
+  uint32_t onTime[3];         // 12
+  uint32_t offTime[3];        // 12
+  uint32_t offset[3];         // 12
+  struct typeUNION{           // 1
     byte interval     :1;
     byte whileON      :1;
     byte whileOFF     :1;
     byte dayTimer     :1;
     byte invert       :1;
   }type;
-  byte weekDays;
+  byte weekDays;              // 1
     // 0 = all
     // 2nd Bit = Sunday
     // 3rd Bit = Monday
     // 4th...
-  struct stateUNION{
+  struct stateUNION{          // 1
     byte automatic    :1;
     byte permOff      :1;
     byte permOn       :1;
@@ -32,9 +32,9 @@ struct TimerSTRUCT{
     byte lastVal      :1;
     byte hasChanged   :1;
   }state;
-  uint32_t realOffTime;
-  char name[17];
-}runningTimer;
+  uint32_t realOffTime;       // 4
+  char name[17];              // 17
+}runningTimer;  // 60 Byte * 16 Ports = 960 bytes in/on EEprom
 
 struct TimerStateSTRUCT{
   struct stateUNION{
