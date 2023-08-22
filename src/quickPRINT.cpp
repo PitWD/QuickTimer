@@ -185,7 +185,7 @@ void PrintErrorOK(int8_t err, byte len, char *strIN, byte addr){
       MBstart(my.Address);
       iicStr[2] = 3;          // Error
       iicStr[3] = addr;       // ID of probe
-      iicStr[4] = strIN[1];   // value ID (e.g. HUM has multiple values on one probe...)
+      iicStr[4] = strIN[1];   // Error Code
       MBstop(5);
     }    
   }
