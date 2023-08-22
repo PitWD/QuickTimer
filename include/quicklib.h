@@ -109,7 +109,7 @@ extern byte myAddress;
 
 struct mySTRUCT{
   // 12 Byte
-  byte Boot;        // = 0;    // 0 = Terminal  /  1 = Slave
+  byte Boot;        // = 0;    // 0 = Terminal  /  1 = RTU  /  2 = ASCII  /  3 = just-values
   uint32_t Speed;   // = 9600;
   byte Solarized;   // = 0;
   byte Address;     // = 123;

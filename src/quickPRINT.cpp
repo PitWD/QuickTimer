@@ -119,7 +119,7 @@ byte PrintDashLine(byte posY, byte posX, byte len){
 #endif
 
 
-void PrintErrorOK(int8_t err, byte len, char *strIN){
+void PrintErrorOK(int8_t err, byte len, char *strIN, byte addr){
 
    // !! Bottom-Line of TUI !!
 
@@ -128,50 +128,67 @@ void PrintErrorOK(int8_t err, byte len, char *strIN){
 
   //byte len = strlen(strIN) + 40;
 
-  EscInverse(1);
-  EscLocate(1,24);
+  if (!my.Boot){
+    // Terminal
+    EscInverse(1);
+    EscLocate(1,24);
 
-  if (err == -1){
-    // Error
-    EscColor(bgRed);
+    if (err == -1){
+      // Error
+      EscColor(bgRed);
+    }
+    else if(err == 1){
+      // OK
+      EscColor(bgGreen);
+    }
+    else{
+      // Info
+      EscBold(1);
+    }
+    
+    PrintSpaces(4);
+    //Serial.print(F("    "));
+    Serial.print(strIN);
+    EscBold(0);
+    EscColor(49);
+
+    Serial.print(F(" @ "));
+    Serial.print(addr);
+    PrintRunTime();
+
+    // c++ pointer shit...
+    if (!len){
+      // TAKE CARE
+      // if strIN is a char-array a la strHLP - we already have the len of strIN
+      // if not, function got called with a (char*)"BlaBlaBla"
+      len = strlen(strIN);
+    }
+    
+    PrintSpaces(40 - len);
+    //for (int i = 0; i < len; i++){
+      //Print1Space();
+    //}
+    
+    //PrintDateTime();
+    //Print1Space();
+    
+    EscInverse(0);
+    //Serial.println("");
+    //Serial.println(strlen(strIN));
   }
-  else if(err == 1){
-    // OK
-    EscColor(bgGreen);
+  else if (my.Boot < 3){
+    // ModBus RTU & AscII
   }
   else{
-    // Info
-    EscBold(1);
+    // just values in case of an error
+    if (err == -1){
+      MBstart(my.Address);
+      iicStr[2] = 3;          // Error
+      iicStr[3] = addr;       // ID of probe
+      iicStr[4] = strIN[1];   // value ID (e.g. HUM has multiple values on one probe...)
+      MBstop(5);
+    }    
   }
-  
-  PrintSpaces(4);
-  //Serial.print(F("    "));
-  Serial.print(strIN);
-  EscBold(0);
-  EscColor(49);
-
-  Serial.print(F(" @ "));
-  PrintRunTime();
-
-  // c++ pointer shit...
-  if (!len){
-    // TAKE CARE
-    // if strIN is a char-array a la strHLP - we already have the len of strIN
-    // if not, function got called with a (char*)"BlaBlaBla"
-    len = strlen(strIN);
-  }
-  
-  PrintSpaces(40 - len);
-  //for (int i = 0; i < len; i++){
-    //Print1Space();
-  //}
-  
-  //PrintDateTime();
-  //Print1Space();
-  
-  EscInverse(0);
-//Serial.println("");
-//Serial.println(strlen(strIN));
 
 }
 
@@ -309,3 +326,60 @@ void PrintSpacer(byte bold){
   }
 }
 
+void PrintHexByte(byte value){
+    Serial.print(value < 16 ? "0" : "");
+    Serial.print(value, HEX);
+}
+
+byte MBstart(byte address){
+  // Start a ModBUS message
+  // (re)misuse iicStr...
+  iicStr[0] = ':';
+  iicStr[1] = address;
+  return 2; // next pos in iicStr
+}
+
+void MBstop(byte pos){
+  // Finish a ModBUS message
+
+  byte lcr = 0;
+
+  Serial.print(":");
+
+  // Calc LCR - print message
+  for (byte i = 1; i < pos; i++){
+    lcr = lcr ^ iicStr[i];
+    PrintHexByte(iicStr[i]);
+  }
+  // print LCR
+  PrintHexByte(lcr);
+
+  // End message with crlf
+  Serial.print(F("\r\n"));
+
+}
+
+void MBaction(byte address, byte idPort, byte state){
+  MBstart(address);
+  iicStr[2] = 1;          // Command ActionPort
+  iicStr[3] = idPort;     // ID of port
+  iicStr[4] = state;      // state of port
+  MBstop(5);
+}
+
+void MBanalog(byte address, byte idProbe, byte idVal, int32_t value){
+  MBstart(address);
+  iicStr[2] = 2;          // Command ActionPort
+  iicStr[3] = idProbe;    // ID of port
+  iicStr[4] = idVal;      // state of port
+  MBaddLong(value, 5);
+  MBstop(9);
+}
+
+byte MBaddLong(int32_t value, byte pos){
+  iicStr[pos++] = (uint8_t)((value >> 24) & 0xFF);
+  iicStr[pos++] = (uint8_t)((value >> 16) & 0xFF);
+  iicStr[pos++] = (uint8_t)((value >> 8) & 0xFF);
+  iicStr[pos++] = (uint8_t)(value & 0xFF);
+  return pos;
+}

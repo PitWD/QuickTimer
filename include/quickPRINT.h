@@ -29,7 +29,7 @@ byte PrintDashLine(byte pos, byte start, byte len);
     #define PrintFloat(val, cntLeadingZeros, cntDecimalPlaces, leadingChar) PrintValue(val, cntLeadingZeros, cntDecimalPlaces, leadingChar, 0)
 #endif
 
-void PrintErrorOK(int8_t err, byte len, char *strIN);
+void PrintErrorOK(int8_t err, byte len, char *strIN, byte addr);
 void PrintCentered(char *strIN, byte centerLen);
 byte PrintMenuTop(char *strIN);
 void PrintMenuEnd(byte pos);
@@ -48,5 +48,11 @@ void PrintTrue(void);
 void PrintFalse(void);
 void PrintCharInSpaces(char charIN);
 void PrintSpacer(byte bold);
+
+byte MBstart(byte address);
+void MBstop(byte pos);
+void MBaction(byte address, byte actionPort, byte state);
+void MBanalog(byte address, byte idProbe, byte idVal, int32_t value);
+byte MBaddLong(int32_t value, byte pos);
 
 #endif

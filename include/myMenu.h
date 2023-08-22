@@ -765,7 +765,7 @@ void PrintLoopMenu(){
     r = 1;
   }
   
-  PrintErrorOK(0, 0 ,(char*)"Loop started...");
+  PrintErrorOK(0, 0 ,(char*)"Loop started...", 0);
 
   EscBold(1);
   pos = PrintLine(pos, 5, 71);

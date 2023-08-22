@@ -23,13 +23,27 @@ byte GetONEchar(){
   // If there is no SerialInput we return 0
 
   byte r = 0;
+  uint16_t charCount = 0;
+  byte colonCount = 0;
 
   if (Serial.available()){
     r = Serial.read();
+    if (r == ':'){
+      colonCount = 1;
+      charCount = 1;
+    }
     delay(12);  // Wait 4 next char in a eventually trashy input
     while (Serial.available()){
       // Messy input...
-      Serial.read();
+      charCount++;
+      r = Serial.read();
+      if (r == ':'){
+        colonCount++;
+        if (colonCount == 4 && charCount == 4){
+          // Reset my.Boot back to "Terminal"
+          my.Boot = 0;
+        } 
+      }      
       delay(12);
       r = 0;
     }    
