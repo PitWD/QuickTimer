@@ -17,6 +17,8 @@ byte mySolarized = 0;
 byte myAddress = 123;
 */
 
+byte firstRun = 1;
+
 mySTRUCT my;
 
 void myToRom(){
@@ -733,43 +735,52 @@ byte PrintQuickTimer(){
 
 void PrintLoopMenu(){
 
-  byte r = 1;
-  byte pos = PrintQuickTimer();
+  if (!my.Boot){
+    byte r = 1;
+    byte pos = PrintQuickTimer();
 
-  pos += 2;
+    pos += 2;
 
-  pos = PrintLine(pos, 5, 71);
+    pos = PrintLine(pos, 5, 71);
 
-  for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
-    // Check state  
-    if (runningState[i].state.permOff){   
+    for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
+      // Check state  
+      if (runningState[i].state.permOff){   
+      }
+      else if (runningState[i].state.permOn){  
+      }
+      else if (runningState[i].state.tempOff && myTime < runningState[i].tempUntil){   
+      }
+      else if (runningState[i].state.tempOn && myTime < runningState[i].tempUntil){ 
+      }
+      else if (runningState[i].state.automatic){
+      }
+      else{
+        // Fully disabled
+        r = 0;
+      }
+      if (r){
+        EscLocate(5, pos);
+        PrintMenuKey(i + 'a', 0, 0, ' ', 1, 0, 0);
+        TimerFromRomRam(i, 1);
+        PrintTimerLine1(i, 9, pos++, 1, 2);
+      }
+      r = 1;
     }
-    else if (runningState[i].state.permOn){  
-    }
-    else if (runningState[i].state.tempOff && myTime < runningState[i].tempUntil){   
-    }
-    else if (runningState[i].state.tempOn && myTime < runningState[i].tempUntil){ 
-    }
-    else if (runningState[i].state.automatic){
-    }
-    else{
-      // Fully disabled
-      r = 0;
-    }
-    if (r){
-      EscLocate(5, pos);
-      PrintMenuKey(i + 'a', 0, 0, ' ', 1, 0, 0);
-      TimerFromRomRam(i, 1);
-      PrintTimerLine1(i, 9, pos++, 1, 2);
-    }
-    r = 1;
+    
+    PrintErrorOK(0, 0 ,(char*)"Loop started...", 0);
+
+    EscBold(1);
+    pos = PrintLine(pos, 5, 71);
+    EscBold(0);
   }
-  
-  PrintErrorOK(0, 0 ,(char*)"Loop started...", 0);
-
-  EscBold(1);
-  pos = PrintLine(pos, 5, 71);
-  EscBold(0);
+  else if (my.Boot < 3){
+    // ModBus RTU & AscII
+  }
+  else{
+    // just values
+    firstRun = 1;
+  }
 
 }
 
@@ -807,15 +818,9 @@ Start:
   Serial.print(my.Speed);
   
   EscLocate(5, pos + 1);
-  PrintMenuKeyStdBoldFaint('6', 1, 0);
-  if (my.Boot){
-    // Boot for ModBus
-    Serial.print(F("Boot4ModBUS"));
-  }
-  else{
-    // Boot for Terminal
-    Serial.print(F("Boot4Terminal"));
-  }
+  PrintMenuKeyStd('6'); Serial.print(F("BootMode = "));
+  EscBold(1);
+  Serial.print((char*)Fa(bootMode[my.Boot]));
   PrintSpaces(3);
   
   
@@ -882,7 +887,10 @@ Start:
     break;    
   case '6':
     // Boot Terminal / Boot ModBus
-    my.Boot = !my.Boot;
+    my.Boot++;
+    if (my.Boot > 3){
+      my.Boot = 0;
+    }
     myToRom();
     break;
   //case '7':

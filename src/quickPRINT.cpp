@@ -359,12 +359,13 @@ void MBstop(byte pos){
 
 }
 
-void MBaction(byte address, byte idPort, byte state){
+void MBaction(byte address, byte idPort, byte state, byte value){
   MBstart(address);
   iicStr[2] = 1;          // Command ActionPort
   iicStr[3] = idPort;     // ID of port
   iicStr[4] = state;      // state of port
-  MBstop(5);
+  iicStr[5] = value;
+  MBstop(6);
 }
 
 void MBanalog(byte address, byte idProbe, byte idVal, int32_t value){

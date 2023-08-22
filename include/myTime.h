@@ -51,6 +51,16 @@ struct TimerStateSTRUCT{
   uint32_t nextAction;
 }runningState[RUNNING_TIMERS_CNT];
 
+const char bootMode_0[] PROGMEM = "Terminal";
+const char bootMode_1[] PROGMEM = "RTU";
+const char bootMode_2[] PROGMEM = "ASCII";
+const char bootMode_3[] PROGMEM = "Just-Values";
+PGM_P const bootMode[] PROGMEM = {
+    bootMode_0,
+    bootMode_1,
+    bootMode_2,
+    bootMode_3
+};
 
 void TimerFromRomRam(byte timer, byte ram){
   // Load Timer

@@ -78,11 +78,6 @@ void loop() {
 
   byte r = 1;
   byte pos = 3;
-  
-  // Seems, that I messed up runningState[n].state.hasChanged
-  // while implementing right Back 'n' Preview times vor multi-interval...
-  // firstRun is a temporary (if fix on the right place would be mor expensive)
-  static byte firstRun = 1;
 
   if (DoTimer()){
     // A Second is over...
@@ -90,20 +85,26 @@ void loop() {
     if (RunTimers() || firstRun){
       // A Port has changed
       pos = 5;
+      byte state = 0;
       for (byte i = 0; i < RUNNING_TIMERS_CNT; i++){
         // Check state  
         if (runningState[i].state.permOff){   
         }
         else if (runningState[i].state.permOn){  
+          state = 1;
         }
         else if (runningState[i].state.tempOff && myTime < runningState[i].tempUntil){   
+          state = 2;
         }
         else if (runningState[i].state.tempOn && myTime < runningState[i].tempUntil){ 
+          state = 3;
         }
         else if (runningState[i].state.automatic){
+          state = 4;
         }
         else{
           // Fully disabled
+          state = 5;
           r = 0;
         }
         if (r){
@@ -111,7 +112,77 @@ void loop() {
           if (runningState[i].state.hasChanged || firstRun){
             // And has changed
             TimerFromRomRam(i, 1);
-            PrintTimerLine1(i, 9, pos, 0, 2);
+            if (!my.Boot){
+              // Terminal
+              PrintTimerLine1(i, 9, pos, 0, 2);
+            }
+            else if (my.Boot < 3){
+              // ModBus RTU & AscII
+            }
+            else{
+              // just values
+              MBaction(my.Address, i, state, runningState[i].state.lastVal);
+              
+              // Type of timer
+              byte type = 0;
+              if (runningTimer.type.dayTimer == 1){
+                //PrintSpaces(2);
+                type = 1;
+              }
+              else if (runningTimer.type.interval){
+                if (runningTimer.type.whileON && runningTimer.type.whileOFF){
+                  // whileOn and whileOff
+                  type = 5;
+                }
+                else if (runningTimer.type.whileON){
+                  // whileOn
+                  type = 3;
+                }
+                else if (runningTimer.type.whileOFF){
+                  // whileOff
+                  type = 4;
+                }
+                else{
+                  // just Interval
+                  type = 2;
+                } 
+              }    
+              else{
+              }
+              MBstart(my.Address);
+              iicStr[2] = 4;          // Command Timer-Type
+              iicStr[3] = i;          // ID of port
+              iicStr[4] = type;       // type of port
+              MBstop(5);
+
+              switch (state){
+              case 1:
+                // perm. on (no time)
+                break;
+              case 2:
+                // temp. off
+              case 3:
+                // temp. on
+                MBstart(my.Address);
+                iicStr[2] = 5;          // Command temporary end time
+                iicStr[3] = i;          // ID of port
+                MBaddLong(runningState[i].tempUntil, 4);
+                MBstop(8);
+                break;
+              case 4:
+                // automatic
+                MBstart(my.Address);
+                iicStr[2] = 6;          // Command lastAction and nextAction time
+                iicStr[3] = i;          // ID of port
+                MBaddLong(runningState[i].lastAction, 4);
+                MBaddLong(runningState[i].nextAction, 8);
+                MBstop(12);
+              default:
+                // perm. off (no time)
+                break;
+              }
+
+            }
             digitalWrite(i + 2, runningState[i].state.lastVal);
             runningState[i].state.hasChanged = 0;
           }
@@ -133,20 +204,37 @@ void loop() {
     //EscColor(0);
     EscInverse(0);    
     */
-    PrintLoopTimes();
+    if (!my.Boot){
+      PrintLoopTimes();    
+    }
+    else if (my.Boot < 3){
+      // ModBus RTU & AscII
+    }
+    else{
+      // just values - send heart-beat
+      MBstart(my.Address);
+      iicStr[2] = 0;          // HeartBeat
+      MBaddLong(myTime, 3);
+      MBstop(7);
+    }
     firstRun = 0;
   }
 
   pos = GetONEchar();
   if (pos){
-    if (pos > 96 && pos < 97 + RUNNING_TIMERS_CNT){
-      PrintEditMenu(pos - 97);
-      PrintLoopMenu();
+    if (!my.Boot){
+      if (pos > 96 && pos < 97 + RUNNING_TIMERS_CNT){
+        PrintEditMenu(pos - 97);
+        PrintLoopMenu();
+      }
+      else{
+        PrintMainMenu();
+      }
     }
     else{
-      PrintMainMenu();
+      // We're not in Terminal-Mode
+      // Force 1x values output
+      firstRun = 1;
     }
   }
-
-
 }
