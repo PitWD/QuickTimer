@@ -730,7 +730,7 @@ Start:
 }
 
 byte PrintQuickTimer(){
-  return PrintMenuTop((char*)"- QuickTimer 1.07 -");
+  return PrintMenuTop((char*)"- QuickTimer 1.08 -");
 }
 
 void PrintLoopMenu(){
@@ -849,15 +849,17 @@ Start:
     break;
   case '2':
     // Set Date
-    hlpDate = SerializeTime(1, 1, 2023, myHour, myMin, mySec);    // Time of now
-    DeSerializeTime(hlpDate + GetUserDate(myTime), &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
+    hlpDate = GetUserDate(myTime);
+    hlpDate += SerializeTime(1, 1, 2023, myHour, myMin, mySec);    // Time of now
+    DeSerializeTime(hlpDate, &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
     RTC_SetDateTime();
     myTime = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
     break;
   case '3':
     // Set Time
-    hlpTime = SerializeTime(myDay, myMonth, myYear, 0, 0, 0);    // Midnight of today
-    DeSerializeTime(hlpTime + GetUserTime(myTime), &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
+    hlpTime = GetUserTime(myTime);
+    hlpTime += SerializeTime(myDay, myMonth, myYear, 0, 0, 0);    // Midnight of today
+    DeSerializeTime(hlpTime, &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
     RTC_SetDateTime();
     myTime = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
     break;

@@ -13,7 +13,7 @@ byte DoTimer(){
   // Time left since last call
   if (last_mS > sys_mS){
     // millis() overflow
-    left_mS = 4294967295UL - last_mS + sys_mS;
+    left_mS = (uint32_t)4294967295 - last_mS + sys_mS;
   }
   else{
     left_mS = sys_mS - last_mS;
@@ -62,7 +62,7 @@ void DoRealTime(){
   //Trigger for RTC sync
   #if USE_RTC
     static uint32_t triggerRTC = 0;
-    static long rtcSyncDiff = 0;
+    static uint32_t rtcSyncDiff = 0;
   #endif
   
   // Overflow day (default 32 = more months with 31 days)
@@ -148,9 +148,9 @@ void RTC_GetTemp(){
   }
 }
 
-long RTC_GetDateTime(){
+uint32_t RTC_GetDateTime(){
   
-  long r = 0;
+  uint32_t r = 0;
 
   IIcSetBytes(0x68, (char*)"\0", 1);
   if (IIcGetBytes(0x68, 7) == 7){
@@ -223,26 +223,26 @@ uint32_t SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, b
     uint32_t serializedTime = 0;
     // Years
     for (uint16_t i = 2023; i < yearIN; i++){
-      serializedTime += 31536000; // 365 * 86400
+      serializedTime += SECS_IN_YEAR; // 365 * 86400
       if (IsLeapYear(i)){
-        serializedTime += 86400;
+        serializedTime += SECS_IN_DAY;
       }
     }
     // Months
-    for (int i = 1; i < monthIN; i++){
-      serializedTime += (uint32_t)GetDaysOfMonth(i, yearIN) * 86400UL;
+    for (byte i = 1; i < monthIN; i++){
+      serializedTime += (uint32_t)GetDaysOfMonth(i, yearIN) * SECS_IN_DAY;
     }
     // Days
-    serializedTime += (uint32_t)(dayIN - 1) * 86400UL;
+    serializedTime += (uint32_t)(dayIN - 1) * SECS_IN_DAY;
     // Hours
-    serializedTime += (uint32_t)hourIN * 3600;
+    serializedTime += (uint32_t)hourIN * SECS_IN_HOUR;
     // Minutes
-    serializedTime += (uint32_t)minIN * 60;
+    serializedTime += (uint32_t)minIN * SECS_IN_MIN;
     // Seconds
-    return serializedTime + secIN;
+    return serializedTime + (uint32_t)secIN;
 }
 
-byte GetDaysOfMonth(char monthIN, uint16_t yearIN){
+byte GetDaysOfMonth(byte monthIN, uint16_t yearIN){
 
   byte r = 31;
 
@@ -272,10 +272,10 @@ byte GetWeekDay(uint32_t serialTime){
   // Sunday is day 1
 
   byte r = 1;
-  uint32_t hlp = serialTime % 604800;    // remove full weeks
+  uint32_t hlp = serialTime % SECS_IN_WEEK;    // remove full weeks
   
-  r += (byte)(hlp / 86400);                   // add full days
-  if (hlp % 86400){
+  r += (byte)(hlp / SECS_IN_DAY);                   // add full days
+  if (hlp % SECS_IN_DAY){
     r++;                                      // one more...    
   }
   
@@ -285,45 +285,45 @@ byte GetWeekDay(uint32_t serialTime){
 
 void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t *yearIN, byte *hourIN, byte *minIN, byte *secIN){
 
-  uint32_t nextSeconds = 31536000UL;
+  uint32_t nextSeconds = SECS_IN_YEAR;
   *yearIN = 2023;
 
   // Year
-  while (serializedIN > nextSeconds){
+  while (serializedIN >= nextSeconds){
     // actual year is full
     
     *yearIN += 1;
     serializedIN -= nextSeconds;
     
-    nextSeconds = 3153600UL;
+    nextSeconds = SECS_IN_YEAR;
     if (IsLeapYear(*yearIN)){
-      nextSeconds += 86400UL;
+      nextSeconds += SECS_IN_DAY;
     }
     
   }
   
   // Month
-  nextSeconds = 2678400UL;
+  nextSeconds = (uint32_t)2678400;
   *monthIN = 1;
-  while (serializedIN > nextSeconds){
+  while (serializedIN >= nextSeconds){
     *monthIN += 1;
     serializedIN -= nextSeconds;
-    nextSeconds = GetDaysOfMonth(*monthIN, *yearIN) * 86400UL;
+    nextSeconds = (uint32_t)GetDaysOfMonth(*monthIN, *yearIN) * SECS_IN_DAY;
   }
 
   // Day
-  *dayIN = (serializedIN / 86400) + 1;
-  serializedIN = serializedIN % 86400;
+  *dayIN = (byte)(serializedIN / SECS_IN_DAY) + 1;
+  serializedIN = serializedIN % SECS_IN_DAY;
 
   // Hour
-  *hourIN = serializedIN / 3600;
-  serializedIN = serializedIN % 3600;
+  *hourIN = (byte)(serializedIN / SECS_IN_HOUR);
+  serializedIN = serializedIN % SECS_IN_HOUR;
 
   // Min
-  *minIN = serializedIN / 60;
+  *minIN = (byte)(serializedIN / SECS_IN_MIN);
 
   // Sec
-  *secIN = serializedIN % 60;
+  *secIN = (byte)(serializedIN % SECS_IN_MIN);
 
 }
 
@@ -335,7 +335,7 @@ uint32_t StrToTime(char *timeIN){
     byte second = 0;
     token = strtok(timeIN, ":");
     while (token != NULL && i < 3) {
-        int t = atoi(token);
+        byte t = atoi(token);
         if (t < 0 || t > 59) {
             return 0;
         }
@@ -355,7 +355,7 @@ uint32_t StrToTime(char *timeIN){
     if (i != 3) {
         return 0;
     }
-    return ((long)hour * 3600) + (minute * 60) + (second);
+    return SerializeTime(1, 1, 2023, hour , minute , second);
 }
 
 uint32_t StrToDate(char *dateIN){

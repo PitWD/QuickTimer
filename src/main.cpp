@@ -69,6 +69,25 @@ void setup() {
     }
   }
 
+/* DEBUG
+
+  for (uint32_t i = SECS_IN_YEAR * 2; i < SECS_IN_YEAR * 3; i += 3661)
+  {
+    DeSerializeTime(i, &myDay, &myMonth, &myYear, &myHour, &myMin, &mySec);
+    PrintDateTime();
+
+    uint32_t j = SerializeTime(myDay, myMonth, myYear, myHour, myMin, mySec);
+    Serial.print(" ");
+    Serial.print(i);
+    Serial.print(" ");
+    Serial.println(j);
+
+  }
+
+  return;
+
+DEBUG */
+
   PrintMainMenu();
 
 }

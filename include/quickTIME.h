@@ -7,13 +7,13 @@ byte DoTimer();
 void DoRealTime();
 #if USE_RTC
   void RTC_GetTemp();
-  long RTC_GetDateTime();
+  uint32_t RTC_GetDateTime();
   char RTC_SetDateTime();
 #endif
 byte IsLeapYear(uint16_t yearIN);
 byte GetWeekDay(uint32_t serialTime);
 uint32_t SerializeTime(byte dayIN, byte monthIN, uint16_t yearIN, byte hourIN, byte minIN, byte secIN);
-byte GetDaysOfMonth(char monthIN, uint16_t yearIN);
+byte GetDaysOfMonth(byte monthIN, uint16_t yearIN);
 void DeSerializeTime(uint32_t serializedIN, byte *dayIN, byte *monthIN, uint16_t *yearIN, byte *hourIN, byte *minIN, byte *secIN);
 uint32_t StrToTime(char *timeIN);
 uint32_t StrToDate(char *dateIN);
@@ -23,6 +23,13 @@ void SerialDayTimeToStr(uint32_t timeIN);
 void DayTimeDateToStr(byte hourDay, byte minuteMonth, uint16_t secondYear, char delimiterChar, byte lastLen);
 #define DayTimeToStr(hour, minute, second) DayTimeDateToStr(hour, minute, second, ':', 2)
 #define DateToStr(day, month, year) DayTimeDateToStr(day, month, year, '.', 4)
+
+#define SECS_IN_MIN (uint32_t)60
+#define SECS_IN_HOUR (uint32_t)3600
+#define SECS_IN_DAY (uint32_t)86400
+#define SECS_IN_WEEK (uint32_t)604800
+#define SECS_IN_MONTH (uint32_t)2628000
+#define SECS_IN_YEAR (uint32_t)31536000
 
 
 // Globals Globals Globals Globals Globals Globals Globals Globals Globals Globals Globals Globals Globals
